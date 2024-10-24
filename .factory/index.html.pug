@@ -1,0 +1,95 @@
+extends _index.pug
+
+block state
+  - const scripts = ['../tag-picker/index.min.js', 'index.min.js']
+  - const styles = ['../layout/index.min.css', '../tag-picker/index.min.css']
+  - const theme = '#000'
+  - const title = 'Tag Picker Sort ' + version
+
+block script
+  script
+    | const picker = new TagPicker(document.forms[0].tags, {
+    |     with: [TagPicker.Sort]
+    | });
+    | picker.on('sort.tag', function (tag) {
+    |     console.log(tag);
+    | });
+    | picker.on('sort.tags', function (tags) {
+    |     console.log(tags);
+    | });
+
+block style
+  style
+    | .tag-picker {
+    |   flex: 1;
+    | }
+
+block content
+  header
+    h1
+      a(href='../tag-picker/index.html#extensions') &laquo;
+      = ' ' + title
+    p Sortable extension for #[a(href='../tag-picker/index.html') Tag Picker]. This extension lets you sort the tag items both programmatically and manually by dragging them into the desired order.
+    hr
+  main
+    form(method='get')
+      p(role='group')
+        input(name='tags' type='text' value='foo, bar, baz')
+        = ' '
+        button(type='submit') Submit
+      p(role='group')
+        button(onclick='return picker.reverse(), false;') Reverse
+        = ' '
+        button(onclick='return picker.sort(), false;') Sort
+    h2#usage
+      a(href='#usage') #
+      = ' Usage'
+    h4 Browser
+    pre: code
+      | &lt;script src="#[a(href='../tag-picker/index.min.js' target='_blank') ./tag-picker/index.min.js]"&gt;&lt;/script&gt;
+      | &lt;script src="#[a(href='index.min.js' target='_blank') ./tag-picker.sort/index.min.js]"&gt;&lt;/script&gt;
+      | &lt;script&gt;
+      |   const picker = new TagPicker(document.querySelector('input'), {
+      |       with: [TagPicker.Sort]
+      |   });
+      | &lt;/script&gt;
+    h4 CommonJS
+    pre: code
+      | const TagPicker = require('@taufik-nurrohman/tag-picker').default;
+      | const TagPickerSort = require('@taufik-nurrohman/tag-picker.sort').default;
+      |
+      | const picker = new TagPicker(document.querySelector('input'), {
+      |     with: [TagPickerSort]
+      | });
+    h4 ECMAScript
+    pre: code
+      | import TagPicker = from '@taufik-nurrohman/tag-picker';
+      | import TagPickerSort from '@taufik-nurrohman/tag-picker.sort';
+      |
+      | const picker = new TagPicker(document.querySelector('input'), {
+      |     with: [TagPickerSort]
+      | });
+    h2#methods
+      a(href='#methods') #
+      = ' Methods'
+    h3 Instance Methods
+    h4: code picker.reverse()
+    p Reverses the order of the current tag items.
+    pre: code
+      | picker.reverse();
+    h4: code picker.sort(method)
+    p Sorts the current tag items in alphabetical order.
+    pre: code
+      | picker.sort();
+    pre: code
+      | picker.sort((a, b) => {
+      |     return a.title.localeCompare(b.title, undefined, {
+      |         numeric: true,
+      |         sensitivity: 'base'
+      |     });
+      | });
+  footer
+    hr
+    p
+      != '&copy; ' + year + ' '
+      a(href='/') Taufik Nurrohman

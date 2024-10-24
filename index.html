@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta content="#000" name="theme-color">
+    <meta content="width=device-width" name="viewport">
+    <meta content="Lets you sort the tag items both programmatically and manually by dragging them into the desired order." name="description">
+    <title>Tag Picker Sort 1.0.0</title>
+    <link href="../layout/index.min.css" rel="stylesheet">
+    <link href="../tag-picker/index.min.css" rel="stylesheet">
+    <style>
+      .tag-picker {
+        flex: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1><a href="../tag-picker/index.html#extensions">&laquo;</a> Tag Picker Sort 1.0.0</h1>
+      <p>Sortable extension for <a href="../tag-picker/index.html">Tag Picker</a>. This extension lets you sort the tag items both programmatically and manually by dragging them into the desired order.</p>
+      <hr>
+    </header>
+    <main>
+      <form method="get">
+        <p role="group"><input name="tags" type="text" value="foo, bar, baz"> <button type="submit">Submit</button></p>
+        <p role="group"><button onclick="return picker.reverse(), false;">Reverse</button> <button onclick="return picker.sort(), false;">Sort</button></p>
+      </form>
+      <h2 id="usage"><a href="#usage">#</a> Usage</h2>
+      <h4>Browser</h4>
+      <pre><code>&lt;script src="<a href="../tag-picker/index.min.js" target="_blank">./tag-picker/index.min.js</a>"&gt;&lt;/script&gt;
+&lt;script src="<a href="index.min.js" target="_blank">./tag-picker.sort/index.min.js</a>"&gt;&lt;/script&gt;
+&lt;script&gt;
+  const picker = new TagPicker(document.querySelector('input'), {
+      with: [TagPicker.Sort]
+  });
+&lt;/script&gt;</code></pre>
+      <h4>CommonJS</h4>
+      <pre><code>const TagPicker = require('@taufik-nurrohman/tag-picker').default;
+const TagPickerSort = require('@taufik-nurrohman/tag-picker.sort').default;
+
+const picker = new TagPicker(document.querySelector('input'), {
+    with: [TagPickerSort]
+});</code></pre>
+      <h4>ECMAScript</h4>
+      <pre><code>import TagPicker = from '@taufik-nurrohman/tag-picker';
+import TagPickerSort from '@taufik-nurrohman/tag-picker.sort';
+
+const picker = new TagPicker(document.querySelector('input'), {
+    with: [TagPickerSort]
+});</code></pre>
+      <h2 id="methods"><a href="#methods">#</a> Methods</h2>
+      <h3>Instance Methods</h3>
+      <h4><code>picker.reverse()</code></h4>
+      <p>Reverses the order of the current tag items.</p>
+      <pre><code>picker.reverse();</code></pre>
+      <h4><code>picker.sort(method)</code></h4>
+      <p>Sorts the current tag items in alphabetical order.</p>
+      <pre><code>picker.sort();</code></pre>
+      <pre><code>picker.sort((a, b) => {
+    return a.title.localeCompare(b.title, undefined, {
+        numeric: true,
+        sensitivity: 'base'
+    });
+});</code></pre>
+    </main>
+    <footer>
+      <hr>
+      <p>&copy; 2024 <a href="/">Taufik Nurrohman</a></p>
+    </footer>
+    <script src="../tag-picker/index.min.js"></script>
+    <script src="index.min.js"></script>
+    <script>
+      const picker = new TagPicker(document.forms[0].tags, {
+          with: [TagPicker.Sort]
+      });
+      picker.on('sort.tag', function (tag) {
+          console.log(tag);
+      });
+      picker.on('sort.tags', function (tags) {
+          console.log(tags);
+      });
+    </script>
+  </body>
+</html>

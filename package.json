@@ -1,0 +1,44 @@
+{
+  "author": "Taufik Nurrohman",
+  "browser": "index.min.js",
+  "bugs": "https://github.com/taufik-nurrohman/tag-picker.sort/issues",
+  "dependencies": {
+    "@taufik-nurrohman/document": "*",
+    "@taufik-nurrohman/is": "*",
+    "@taufik-nurrohman/to": "*",
+    "sortablejs": "*"
+  },
+  "description": "Lets you sort the tag items both programmatically and manually by dragging them into the desired order.",
+  "devDependencies": {
+    "@taufik-nurrohman/factory": "*"
+  },
+  "exports": {
+    "import": "./index.mjs",
+    "require": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "index.min.js",
+    "index.mjs"
+  ],
+  "funding": {
+    "url": "https://paypal.me/tatautaufik"
+  },
+  "homepage": "https://taufik-nurrohman.js.org/tag-picker.sort",
+  "keywords": [
+    "tag",
+    "picker"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "module": "index.mjs",
+  "name": "@taufik-nurrohman/tag-picker.sort",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/taufik-nurrohman/tag-picker.sort.git"
+  },
+  "scripts": {
+    "pack": "pack --clean=false --from=.factory --js-format=umd --js-name=TagPicker.Sort --js-top='%(js.license)' --mjs=true --to=."
+  },
+  "version": "1.0.0"
+}
