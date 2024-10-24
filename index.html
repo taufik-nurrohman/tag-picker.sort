@@ -12,6 +12,9 @@
       .tag-picker {
         flex: 1;
       }
+      .tag-picker__tag--ghost {
+        visibility: hidden;
+      }
     </style>
   </head>
   <body>
@@ -22,7 +25,7 @@
     </header>
     <main>
       <form method="get">
-        <p role="group"><input name="tags" type="text" value="foo, bar, baz"> <button type="submit">Submit</button></p>
+        <p role="group"><input name="tags" placeholder="Tags go here&hellip;" type="text" value="foo, bar, baz"> <button type="submit">Submit</button></p>
         <p role="group"><button onclick="return picker.reverse(), false;">Reverse</button> <button onclick="return picker.sort(), false;">Sort</button></p>
       </form>
       <h2 id="usage"><a href="#usage">#</a> Usage</h2>

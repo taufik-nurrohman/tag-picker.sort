@@ -3269,8 +3269,6 @@
         return references.get(key);
     }
 
-    function onDeselect() {}
-
     function onEnd(e) {
         var t = this,
             selectedClass = t.option('selectedClass'),
@@ -3283,7 +3281,7 @@
                 });
             }
             setClass(item, selectedClass).focus();
-        }, 0);
+        });
     }
 
     function onMove(e) {
@@ -3302,7 +3300,7 @@
                     list.insertBefore(v, getChildren(list, i + (j < i)));
                 }
             });
-        }, 0);
+        });
         _excludes.forEach(function (v, k) {
             if (v === e.related) {
                 freeze = true;
@@ -3314,13 +3312,14 @@
         return freeze ? false : vector;
     }
 
-    function onSelect() {}
-
     function onSort(e) {
         var t = this,
             picker = t._picker,
             item = e.item,
-            items = e.items;
+            items = e.items,
+            tags = t.toArray();
+        tags.pop(); // Remove the last item (the `.tag-picker__text` item)
+        console.log(tags);
         picker.fire('sort.tag' + (items ? 's' : ""), [toCount(items) ? items.map(function (v) {
             return v.title;
         }) : item.title]).fire('change', toCount(items) ? [] : [item.title]);
@@ -3336,7 +3335,6 @@
         t._excludes = excludes;
         t._excludesPositions = excludesPositions;
         t._move = null;
-        setClass(e.item, t.option('selectedClass'));
     }
 
     function setReference(key, value) {
@@ -3352,6 +3350,8 @@
             if (!_active) {
                 return $;
             }
+            // TODO
+            return $;
         });
         !isFunction($$.sort) && ($$.sort = function (method) {
             var $ = this,
@@ -3359,29 +3359,33 @@
             if (!_active) {
                 return $;
             }
+            // TODO
+            return $;
         });
         var _mask = $._mask,
             self = $.self,
             state = $.state,
             tags = _mask.tags,
             n = state.n;
+        var n_tag_ = n + '__tag--';
         var sortable = new Sortable(tags, {
             animation: 150,
             avoidImplicitDeselect: false,
+            chosenClass: n_tag_ + 'touch',
             dataIdAttr: 'title',
-            fallbackOnBody: true,
-            fallbackTolerance: 3,
+            dragClass: n_tag_ + 'move',
             filter: '.' + n + '__text',
             forceFallback: true,
+            ghostClass: n_tag_ + 'ghost',
             multiDrag: true,
             multiDragKey: 'ctrl',
-            onDeselect: onDeselect,
             onEnd: onEnd,
             onMove: onMove,
-            onSelect: onSelect,
             onSort: onSort,
             onStart: onStart,
-            selectedClass: n + '__tag--selected'
+            preventOnFilter: false,
+            selectedClass: n_tag_ + 'selected',
+            touchStartThreshold: 1
         });
         sortable._picker = $;
         setReference(self, sortable);

@@ -23,6 +23,9 @@ block style
     | .tag-picker {
     |   flex: 1;
     | }
+    | .tag-picker__tag--ghost {
+    |   visibility: hidden;
+    | }
 
 block content
   header
@@ -34,7 +37,7 @@ block content
   main
     form(method='get')
       p(role='group')
-        input(name='tags' type='text' value='foo, bar, baz')
+        input(name='tags' placeholder!='Tags go here&hellip;' type='text' value='foo, bar, baz')
         = ' '
         button(type='submit') Submit
       p(role='group')

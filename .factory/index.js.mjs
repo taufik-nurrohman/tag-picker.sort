@@ -16,10 +16,6 @@ function getReference(key) {
     return references.get(key);
 }
 
-function onDeselect() {
-
-}
-
 function onEnd(e) {
     let t = this,
         selectedClass = t.option('selectedClass'),
@@ -29,7 +25,7 @@ function onEnd(e) {
             items.forEach(item => setClass(item, selectedClass));
         }
         setClass(item, selectedClass).focus();
-    }, 0);
+    });
 }
 
 function onMove(e) {
@@ -46,7 +42,7 @@ function onMove(e) {
                 list.insertBefore(v, getChildren(list, i + (j < i)));
             }
         });
-    }, 0);
+    });
     _excludes.forEach((v, k) => {
         if (v === e.related) {
             freeze = true;
@@ -58,14 +54,13 @@ function onMove(e) {
     return freeze ? false : vector;
 }
 
-function onSelect() {
-
-}
-
 function onSort(e) {
     let t = this,
         picker = t._picker,
-        {item, items} = e;
+        {item, items} = e,
+        tags = t.toArray();
+    tags.pop(); // Remove the last item (the `.tag-picker__text` item)
+    console.log(tags);
     picker.fire('sort.tag' + (items ? 's' : ""), [toCount(items) ? items.map(v => v.title) : item.title]).fire('change', toCount(items) ? [] : [item.title]);
 }
 
@@ -77,7 +72,6 @@ function onStart(e) {
     t._excludes = excludes;
     t._excludesPositions = excludesPositions;
     t._move = null;
-    setClass(e.item, t.option('selectedClass'));
 }
 
 function setReference(key, value) {
@@ -93,6 +87,8 @@ function attach() {
         if (!_active) {
             return $;
         }
+        // TODO
+        return $;
     });
     !isFunction($$.sort) && ($$.sort = function (method) {
         let $ = this,
@@ -100,27 +96,31 @@ function attach() {
         if (!_active) {
             return $;
         }
+        // TODO
+        return $;
     });
     let {_mask, self, state} = $,
         {tags} = _mask,
         {n} = state;
+    let n_tag_ = n + '__tag--';
     const sortable = new Sortable(tags, {
         animation: 150,
         avoidImplicitDeselect: false,
+        chosenClass: n_tag_ + 'touch',
         dataIdAttr: 'title',
-        fallbackOnBody: true,
-        fallbackTolerance: 3,
+        dragClass: n_tag_ + 'move',
         filter: '.' + n + '__text',
         forceFallback: true,
+        ghostClass: n_tag_ + 'ghost',
         multiDrag: true,
         multiDragKey: 'ctrl',
-        onDeselect,
         onEnd,
         onMove,
-        onSelect,
         onSort,
         onStart,
-        selectedClass: n + '__tag--selected',
+        preventOnFilter: false,
+        selectedClass: n_tag_ + 'selected',
+        touchStartThreshold: 1,
     });
     sortable._picker = $;
     setReference(self, sortable);
