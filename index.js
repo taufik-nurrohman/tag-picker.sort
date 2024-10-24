@@ -3331,9 +3331,8 @@
             excludes = [].slice.call(getElements(t.option('filter'), t.el)),
             excludesPositions = excludes.map(function (v) {
                 return utils.index(v);
-            }),
-            picker = t._picker;
-        console.log(picker._tags);
+            });
+        t._picker;
         t._excludes = excludes;
         t._excludesPositions = excludesPositions;
         t._move = null;

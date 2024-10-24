@@ -74,7 +74,6 @@ function onStart(e) {
         excludes = [].slice.call(getElements(t.option('filter'), t.el)),
         excludesPositions = excludes.map(v => utils.index(v)),
         picker = t._picker;
-    console.log(picker._tags);
     t._excludes = excludes;
     t._excludesPositions = excludesPositions;
     t._move = null;
