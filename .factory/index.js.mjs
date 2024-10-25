@@ -1,12 +1,9 @@
-import {MultiDrag, Sortable} from 'sortablejs';
 import {W, getChildren, getElements, getNext, setClass} from '@taufik-nurrohman/document';
 import {isFunction} from '@taufik-nurrohman/is';
 import {toCount} from '@taufik-nurrohman/to';
 
 const name = 'TagPicker.Sort';
 const references = new WeakMap;
-
-Sortable.mount(new MultiDrag);
 
 const {utils} = Sortable;
 

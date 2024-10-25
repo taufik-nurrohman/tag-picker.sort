@@ -1,7 +1,7 @@
 extends _index.pug
 
 block state
-  - const scripts = ['../tag-picker/index.min.js', 'index.min.js']
+  - const scripts = ['https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js', '../tag-picker/index.min.js', 'index.min.js']
   - const styles = ['../layout/index.min.css', '../tag-picker/index.min.css']
   - const theme = '#000'
   - const title = 'Tag Picker Sort ' + version
@@ -49,6 +49,7 @@ block content
       = ' Usage'
     h4 Browser
     pre: code
+      | &lt;script src="#[a(href='https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js' target='_blank') ./sortable.min.js]"&gt;&lt;/script&gt;
       | &lt;script src="#[a(href='../tag-picker/index.min.js' target='_blank') ./tag-picker/index.min.js]"&gt;&lt;/script&gt;
       | &lt;script src="#[a(href='index.min.js' target='_blank') ./tag-picker.sort/index.min.js]"&gt;&lt;/script&gt;
       | &lt;script&gt;
@@ -68,6 +69,12 @@ block content
     pre: code
       | import TagPicker = from '@taufik-nurrohman/tag-picker';
       | import TagPickerSort from '@taufik-nurrohman/tag-picker.sort';
+      |
+      | import {MultiDrag, Sortable} from #[a(href='https://www.npmjs.com/package/sortablejs' target='_blank') 'sortablejs'];
+      |
+      | Sortable.mount(new MultiDrag);
+      |
+      | window.Sortable = Sortable; // Register to global
       |
       | const picker = new TagPicker(document.querySelector('input'), {
       |     with: [TagPickerSort]
