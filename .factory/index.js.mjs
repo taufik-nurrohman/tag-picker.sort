@@ -1,4 +1,4 @@
-import {W, getChildren, getElements, getNext, setClass} from '@taufik-nurrohman/document';
+import {W, getChildren, getElements, getNext, letStyle, setClass, setStyle} from '@taufik-nurrohman/document';
 import {isFunction} from '@taufik-nurrohman/is';
 import {toCount} from '@taufik-nurrohman/to';
 
@@ -9,20 +9,25 @@ const {utils} = Sortable;
 
 // Some of the sortable code tweak(s) were taken from <https://github.com/SortableJS/Sortable/issues/347#issuecomment-93726446>
 
+function forEachArray(array, then) {
+    array.forEach(then);
+}
+
 function getReference(key) {
     return references.get(key);
+}
+
+function letReference(key) {
+    return references.delete(key);
 }
 
 function onEnd(e) {
     let t = this,
         selectedClass = t.option('selectedClass'),
-        {item, items} = e;
-    W.setTimeout(() => {
-        if (toCount(items)) {
-            items.forEach(item => setClass(item, selectedClass));
-        }
-        setClass(item, selectedClass).focus();
-    });
+        {from, item, to} = e;
+    W.setTimeout(() => setClass(item, selectedClass).focus());
+    from && letStyle(from, 'cursor');
+    to && letStyle(to, 'cursor');
 }
 
 function onMove(e) {
@@ -31,8 +36,8 @@ function onMove(e) {
         freeze = false, vector;
     W.clearTimeout(t._move);
     t._move = W.setTimeout(() => {
-        let list = e.to;
-        _excludes.forEach((v, k) => {
+        let list = e.from || e.to;
+        forEachArray(_excludes, (v, k) => {
             let i = _excludesPositions[k];
             if (v !== getChildren(list, i)) {
                 let j = utils.index(v);
@@ -40,7 +45,7 @@ function onMove(e) {
             }
         });
     });
-    _excludes.forEach((v, k) => {
+    forEachArray(_excludes, (v, k) => {
         if (v === e.related) {
             freeze = true;
         }
@@ -52,23 +57,27 @@ function onMove(e) {
 }
 
 function onSort(e) {
-    let t = this,
+    let t = this, v,
         picker = t._picker,
-        {item, items} = e,
-        tags = t.toArray();
-    tags.pop(); // Remove the last item (the `.tag-picker__text` item)
-    console.log(tags);
-    picker.fire('sort.tag' + (items ? 's' : ""), [toCount(items) ? items.map(v => v.title) : item.title]).fire('change', toCount(items) ? [] : [item.title]);
+        {_tags, self, state} = picker,
+        {item} = e;
+    let tags = t.toArray().slice(0, -1); // All but the last item (the `.tag-picker__text` item)
+    self.value = tags.join(state.join);
+    picker.fire('sort.tag', [v = item.title]).fire('change', [v]);
+    picker.value = picker.value; // Refresh!
 }
 
 function onStart(e) {
     let t = this,
         excludes = [].slice.call(getElements(t.option('filter'), t.el)),
         excludesPositions = excludes.map(v => utils.index(v)),
+        {from, item, items, to} = e,
         picker = t._picker;
     t._excludes = excludes;
     t._excludesPositions = excludesPositions;
     t._move = null;
+    from && setStyle(from, 'cursor', 'move');
+    to && setStyle(to, 'cursor', 'move');
 }
 
 function setReference(key, value) {
@@ -80,21 +89,37 @@ function attach() {
     const $$ = $.constructor.prototype;
     !isFunction($$.reverse) && ($$.reverse = function () {
         let $ = this,
-            {_active} = $;
+            sortable = getReference($),
+            {_active, self, state} = $,
+            {join} = state;
         if (!_active) {
             return $;
         }
-        // TODO
-        return $;
+        let tags = sortable.toArray(),
+            text = tags.pop();
+        tags = tags.reverse();
+        self.value = tags.join(join);
+        return sortable.sort(tags.concat(text), true), $.fire('sort.tags', [tags]);
     });
     !isFunction($$.sort) && ($$.sort = function (method) {
         let $ = this,
-            {_active} = $;
+            sortable = getReference($),
+            {_active, self, state} = $,
+            {join} = state;
         if (!_active) {
             return $;
         }
-        // TODO
-        return $;
+        method = (method || function (a, b) {
+            return a.localeCompare(b, undefined, {
+                numeric: true,
+                sensitivity: 'base'
+            });
+        }).bind($);
+        let tags = sortable.toArray(),
+            text = tags.pop();
+        tags = tags.sort(method);
+        self.value = tags.join(join);
+        return sortable.sort(tags.concat(text), true), $.fire('sort.tags', [tags]);
     });
     let {_mask, self, state} = $,
         {tags} = _mask,
@@ -102,31 +127,28 @@ function attach() {
     let n_tag_ = n + '__tag--';
     const sortable = new Sortable(tags, {
         animation: 150,
-        avoidImplicitDeselect: false,
-        chosenClass: n_tag_ + 'touch',
+        chosenClass: n_tag_ + 'select',
         dataIdAttr: 'title',
         dragClass: n_tag_ + 'move',
         filter: '.' + n + '__text',
         forceFallback: true,
         ghostClass: n_tag_ + 'ghost',
-        multiDrag: true,
-        multiDragKey: 'ctrl',
         onEnd,
         onMove,
         onSort,
         onStart,
-        preventOnFilter: false,
         selectedClass: n_tag_ + 'selected',
-        touchStartThreshold: 1,
+        touchStartThreshold: 1
     });
     sortable._picker = $;
-    setReference(self, sortable);
+    setReference($, sortable);
     return $;
 }
 
 function detach() {
     let $ = this,
-        sortable = getReference($.self);
+        sortable = getReference($);
+    letReference($);
     sortable && sortable.destroy();
 }
 

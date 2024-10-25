@@ -27,14 +27,66 @@
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = f() : typeof define === 'function' && define.amd ? define(f) : (g = typeof globalThis !== 'undefined' ? globalThis : g || self, (g.TagPicker = g.TagPicker || {}, g.TagPicker.Sort = f()));
 })(this, (function () {
     'use strict';
+    var isArray = function isArray(x) {
+        return Array.isArray(x);
+    };
+    var isDefined = function isDefined(x) {
+        return 'undefined' !== typeof x;
+    };
     var isFunction = function isFunction(x) {
         return 'function' === typeof x;
+    };
+    var isInstance = function isInstance(x, of) {
+        return x && isSet(of) && x instanceof of ;
+    };
+    var isNull = function isNull(x) {
+        return null === x;
     };
     var isNumber = function isNumber(x) {
         return 'number' === typeof x;
     };
-    var toCount = function toCount(x) {
-        return x.length;
+    var isObject = function isObject(x, isPlain) {
+        if (isPlain === void 0) {
+            isPlain = true;
+        }
+        if ('object' !== typeof x) {
+            return false;
+        }
+        return isPlain ? isInstance(x, Object) : true;
+    };
+    var isSet = function isSet(x) {
+        return isDefined(x) && !isNull(x);
+    };
+    var toCaseCamel = function toCaseCamel(x) {
+        return x.replace(/[-_.](\w)/g, function (m0, m1) {
+            return toCaseUpper(m1);
+        });
+    };
+    var toCaseUpper = function toCaseUpper(x) {
+        return x.toUpperCase();
+    };
+    var _fromValue = function fromValue(x) {
+        if (isArray(x)) {
+            return x.map(function (v) {
+                return _fromValue(x);
+            });
+        }
+        if (isObject(x)) {
+            for (var k in x) {
+                x[k] = _fromValue(x[k]);
+            }
+            return x;
+        }
+        if (false === x) {
+            return 'false';
+        }
+        if (null === x) {
+            return 'null';
+        }
+        if (true === x) {
+            return 'true';
+        }
+        return "" + x;
     };
     var D = document;
     var W = window;
@@ -48,31 +100,46 @@
     var getNext = function getNext(node, anyNode) {
         return node['next' + (anyNode ? "" : 'Element') + 'Sibling'] || null;
     };
+    var letStyle = function letStyle(node, style) {
+        return node.style[toCaseCamel(style)] = null, node;
+    };
     var setClass = function setClass(node, value) {
         return node.classList.add(value), node;
+    };
+    var setStyle = function setStyle(node, style, value) {
+        if (isNumber(value)) {
+            value += 'px';
+        }
+        return node.style[toCaseCamel(style)] = _fromValue(value), node;
     };
     var name = 'TagPicker.Sort';
     var references = new WeakMap();
     var _Sortable = Sortable,
         utils = _Sortable.utils;
     // Some of the sortable code tweak(s) were taken from <https://github.com/SortableJS/Sortable/issues/347#issuecomment-93726446>
+    function forEachArray(array, then) {
+        array.forEach(then);
+    }
+
     function getReference(key) {
         return references.get(key);
+    }
+
+    function letReference(key) {
+        return references.delete(key);
     }
 
     function onEnd(e) {
         var t = this,
             selectedClass = t.option('selectedClass'),
+            from = e.from,
             item = e.item,
-            items = e.items;
+            to = e.to;
         W.setTimeout(function () {
-            if (toCount(items)) {
-                items.forEach(function (item) {
-                    return setClass(item, selectedClass);
-                });
-            }
-            setClass(item, selectedClass).focus();
+            return setClass(item, selectedClass).focus();
         });
+        from && letStyle(from, 'cursor');
+        to && letStyle(to, 'cursor');
     }
 
     function onMove(e) {
@@ -83,8 +150,8 @@
             vector;
         W.clearTimeout(t._move);
         t._move = W.setTimeout(function () {
-            var list = e.to;
-            _excludes.forEach(function (v, k) {
+            var list = e.from || e.to;
+            forEachArray(_excludes, function (v, k) {
                 var i = _excludesPositions[k];
                 if (v !== getChildren(list, i)) {
                     var j = utils.index(v);
@@ -92,7 +159,7 @@
                 }
             });
         });
-        _excludes.forEach(function (v, k) {
+        forEachArray(_excludes, function (v, k) {
             if (v === e.related) {
                 freeze = true;
             }
@@ -105,15 +172,16 @@
 
     function onSort(e) {
         var t = this,
-            picker = t._picker,
-            item = e.item,
-            items = e.items,
-            tags = t.toArray();
-        tags.pop(); // Remove the last item (the `.tag-picker__text` item)
-        console.log(tags);
-        picker.fire('sort.tag' + (items ? 's' : ""), [toCount(items) ? items.map(function (v) {
-            return v.title;
-        }) : item.title]).fire('change', toCount(items) ? [] : [item.title]);
+            v,
+            picker = t._picker;
+        picker._tags;
+        var self = picker.self,
+            state = picker.state,
+            item = e.item;
+        var tags = t.toArray().slice(0, -1); // All but the last item (the `.tag-picker__text` item)
+        self.value = tags.join(state.join);
+        picker.fire('sort.tag', [v = item.title]).fire('change', [v]);
+        picker.value = picker.value; // Refresh!
     }
 
     function onStart(e) {
@@ -121,11 +189,17 @@
             excludes = [].slice.call(getElements(t.option('filter'), t.el)),
             excludesPositions = excludes.map(function (v) {
                 return utils.index(v);
-            });
+            }),
+            from = e.from;
+        e.item;
+        e.items;
+        var to = e.to;
         t._picker;
         t._excludes = excludes;
         t._excludesPositions = excludesPositions;
         t._move = null;
+        from && setStyle(from, 'cursor', 'move');
+        to && setStyle(to, 'cursor', 'move');
     }
 
     function setReference(key, value) {
@@ -137,55 +211,72 @@
         var $$ = $.constructor.prototype;
         !isFunction($$.reverse) && ($$.reverse = function () {
             var $ = this,
-                _active = $._active;
+                sortable = getReference($),
+                _active = $._active,
+                self = $.self,
+                state = $.state,
+                join = state.join;
             if (!_active) {
                 return $;
             }
-            // TODO
-            return $;
+            var tags = sortable.toArray(),
+                text = tags.pop();
+            tags = tags.reverse();
+            self.value = tags.join(join);
+            return sortable.sort(tags.concat(text), true), $.fire('sort.tags', [tags]);
         });
         !isFunction($$.sort) && ($$.sort = function (method) {
             var $ = this,
-                _active = $._active;
+                sortable = getReference($),
+                _active = $._active,
+                self = $.self,
+                state = $.state,
+                join = state.join;
             if (!_active) {
                 return $;
             }
-            // TODO
-            return $;
+            method = (method || function (a, b) {
+                return a.localeCompare(b, undefined, {
+                    numeric: true,
+                    sensitivity: 'base'
+                });
+            }).bind($);
+            var tags = sortable.toArray(),
+                text = tags.pop();
+            tags = tags.sort(method);
+            self.value = tags.join(join);
+            return sortable.sort(tags.concat(text), true), $.fire('sort.tags', [tags]);
         });
-        var _mask = $._mask,
-            self = $.self,
-            state = $.state,
+        var _mask = $._mask;
+        $.self;
+        var state = $.state,
             tags = _mask.tags,
             n = state.n;
         var n_tag_ = n + '__tag--';
         var sortable = new Sortable(tags, {
             animation: 150,
-            avoidImplicitDeselect: false,
-            chosenClass: n_tag_ + 'touch',
+            chosenClass: n_tag_ + 'select',
             dataIdAttr: 'title',
             dragClass: n_tag_ + 'move',
             filter: '.' + n + '__text',
             forceFallback: true,
             ghostClass: n_tag_ + 'ghost',
-            multiDrag: true,
-            multiDragKey: 'ctrl',
             onEnd: onEnd,
             onMove: onMove,
             onSort: onSort,
             onStart: onStart,
-            preventOnFilter: false,
             selectedClass: n_tag_ + 'selected',
             touchStartThreshold: 1
         });
         sortable._picker = $;
-        setReference(self, sortable);
+        setReference($, sortable);
         return $;
     }
 
     function detach() {
         var $ = this,
-            sortable = getReference($.self);
+            sortable = getReference($);
+        letReference($);
         sortable && sortable.destroy();
     }
     var index_js = {

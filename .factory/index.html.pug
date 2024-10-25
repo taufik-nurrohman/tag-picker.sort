@@ -13,9 +13,11 @@ block script
     | });
     | picker.on('sort.tag', function (tag) {
     |     console.log(tag);
+    |     console.log(this.value);
     | });
     | picker.on('sort.tags', function (tags) {
     |     console.log(tags);
+    |     console.log(this.value);
     | });
 
 block style
@@ -42,7 +44,7 @@ block content
   main
     form(method='get' target='_blank')
       p(role='group')
-        input(name='tags' placeholder!='Tags go here&hellip;' type='text' value='foo, bar, baz')
+        input(name='tags' placeholder!='Tags go here&hellip;' type='text' value='foo, bar, baz, qux')
         = ' '
         button(type='submit') Submit
       p(role='group')
@@ -67,7 +69,9 @@ block content
       | const TagPicker = require('@taufik-nurrohman/tag-picker').default;
       | const TagPickerSort = require('@taufik-nurrohman/tag-picker.sort').default;
       |
-      | // TODO: Sortable
+      | if ('undefined' === typeof Sortable) {
+      |     throw new ReferenceError('Missing `Sortable` library.');
+      | }
       |
       | const picker = new TagPicker(document.querySelector('input'), {
       |     with: [TagPickerSort]
@@ -77,11 +81,9 @@ block content
       | import TagPicker = from '@taufik-nurrohman/tag-picker';
       | import TagPickerSort from '@taufik-nurrohman/tag-picker.sort';
       |
-      | import {MultiDrag, Sortable} from #[a(href='https://www.npmjs.com/package/sortablejs' target='_blank') 'sortablejs'];
+      | import Sortable from #[a(href='https://www.npmjs.com/package/sortablejs' target='_blank') 'sortablejs'];
       |
-      | Sortable.mount(new MultiDrag);
-      |
-      | window.Sortable = Sortable; // Register to global
+      | window.Sortable = Sortable; // Expose `Sortable` class to `window`
       |
       | const picker = new TagPicker(document.querySelector('input'), {
       |     with: [TagPickerSort]

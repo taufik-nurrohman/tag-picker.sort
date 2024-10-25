@@ -31,7 +31,7 @@
     </header>
     <main>
       <form method="get" target="_blank">
-        <p role="group"><input name="tags" placeholder="Tags go here&hellip;" type="text" value="foo, bar, baz"> <button type="submit">Submit</button></p>
+        <p role="group"><input name="tags" placeholder="Tags go here&hellip;" type="text" value="foo, bar, baz, qux"> <button type="submit">Submit</button></p>
         <p role="group"><button onclick="return picker.reverse(), false;">Reverse</button> <button onclick="return picker.sort(), false;">Sort</button></p>
       </form>
       <h2 id="usage"><a href="#usage">#</a> Usage</h2>
@@ -48,7 +48,9 @@
       <pre><code>const TagPicker = require('@taufik-nurrohman/tag-picker').default;
 const TagPickerSort = require('@taufik-nurrohman/tag-picker.sort').default;
 
-// TODO: Sortable
+if ('undefined' === typeof Sortable) {
+    throw new ReferenceError('Missing `Sortable` library.');
+}
 
 const picker = new TagPicker(document.querySelector('input'), {
     with: [TagPickerSort]
@@ -57,11 +59,9 @@ const picker = new TagPicker(document.querySelector('input'), {
       <pre><code>import TagPicker = from '@taufik-nurrohman/tag-picker';
 import TagPickerSort from '@taufik-nurrohman/tag-picker.sort';
 
-import {MultiDrag, Sortable} from <a href="https://www.npmjs.com/package/sortablejs" target="_blank">'sortablejs'</a>;
+import Sortable from <a href="https://www.npmjs.com/package/sortablejs" target="_blank">'sortablejs'</a>;
 
-Sortable.mount(new MultiDrag);
-
-window.Sortable = Sortable; // Register to global
+window.Sortable = Sortable; // Expose `Sortable` class to `window`
 
 const picker = new TagPicker(document.querySelector('input'), {
     with: [TagPickerSort]
@@ -94,9 +94,11 @@ const picker = new TagPicker(document.querySelector('input'), {
       });
       picker.on('sort.tag', function (tag) {
           console.log(tag);
+          console.log(this.value);
       });
       picker.on('sort.tags', function (tags) {
           console.log(tags);
+          console.log(this.value);
       });
     </script>
   </body>
