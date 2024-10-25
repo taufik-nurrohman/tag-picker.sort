@@ -1,4 +1,4 @@
-import {W, getChildren, getElements, getNext, letStyle, setClass, setStyle} from '@taufik-nurrohman/document';
+import {W, getChildren, getElements, getNext, letStyle, setStyle} from '@taufik-nurrohman/document';
 import {isFunction} from '@taufik-nurrohman/is';
 import {toCount} from '@taufik-nurrohman/to';
 
@@ -22,38 +22,25 @@ function letReference(key) {
 }
 
 function onEnd(e) {
-    let t = this,
-        selectedClass = t.option('selectedClass'),
-        {from, item, to} = e;
-    W.setTimeout(() => setClass(item, selectedClass).focus());
+    let {from, to} = e;
     from && letStyle(from, 'cursor');
     to && letStyle(to, 'cursor');
 }
 
 function onMove(e) {
     let t = this,
-        {_excludes, _excludesPositions} = t,
-        freeze = false, vector;
+        {_excludes, _excludesPositions} = t;
     W.clearTimeout(t._move);
     t._move = W.setTimeout(() => {
-        let list = e.from || e.to;
+        let list = e.to;
         forEachArray(_excludes, (v, k) => {
-            let i = _excludesPositions[k];
+            let i = _excludesPositions[k], j;
             if (v !== getChildren(list, i)) {
-                let j = utils.index(v);
+                j = utils.index(v);
                 list.insertBefore(v, getChildren(list, i + (j < i)));
             }
         });
     });
-    forEachArray(_excludes, (v, k) => {
-        if (v === e.related) {
-            freeze = true;
-        }
-        if (v === getNext(e.related) && e.relatedRect.top < e.draggedRect.top) {
-            vector = -1;
-        }
-    });
-    return freeze ? false : vector;
 }
 
 function onSort(e) {

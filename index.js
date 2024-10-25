@@ -97,14 +97,8 @@
     var getElements = function getElements(query, scope) {
         return (scope || D).querySelectorAll(query);
     };
-    var getNext = function getNext(node, anyNode) {
-        return node['next' + (anyNode ? "" : 'Element') + 'Sibling'] || null;
-    };
     var letStyle = function letStyle(node, style) {
         return node.style[toCaseCamel(style)] = null, node;
-    };
-    var setClass = function setClass(node, value) {
-        return node.classList.add(value), node;
     };
     var setStyle = function setStyle(node, style, value) {
         if (isNumber(value)) {
@@ -130,14 +124,8 @@
     }
 
     function onEnd(e) {
-        var t = this,
-            selectedClass = t.option('selectedClass'),
-            from = e.from,
-            item = e.item,
+        var from = e.from,
             to = e.to;
-        W.setTimeout(function () {
-            return setClass(item, selectedClass).focus();
-        });
         from && letStyle(from, 'cursor');
         to && letStyle(to, 'cursor');
     }
@@ -145,29 +133,19 @@
     function onMove(e) {
         var t = this,
             _excludes = t._excludes,
-            _excludesPositions = t._excludesPositions,
-            freeze = false,
-            vector;
+            _excludesPositions = t._excludesPositions;
         W.clearTimeout(t._move);
         t._move = W.setTimeout(function () {
-            var list = e.from || e.to;
+            var list = e.to;
             forEachArray(_excludes, function (v, k) {
-                var i = _excludesPositions[k];
+                var i = _excludesPositions[k],
+                    j;
                 if (v !== getChildren(list, i)) {
-                    var j = utils.index(v);
+                    j = utils.index(v);
                     list.insertBefore(v, getChildren(list, i + (j < i)));
                 }
             });
         });
-        forEachArray(_excludes, function (v, k) {
-            if (v === e.related) {
-                freeze = true;
-            }
-            if (v === getNext(e.related) && e.relatedRect.top < e.draggedRect.top) {
-                vector = -1;
-            }
-        });
-        return freeze ? false : vector;
     }
 
     function onSort(e) {
