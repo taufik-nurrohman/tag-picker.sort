@@ -20,6 +20,11 @@ block script
 
 block style
   style
+    | body {
+    |   margin-left: auto;
+    |   margin-right: auto;
+    |   max-width: 60rem;
+    | }
     | .tag-picker {
     |   flex: 1;
     | }
@@ -29,13 +34,13 @@ block style
 
 block content
   header
-    h1
-      a(href='../tag-picker/index.html#extensions') &laquo;
-      = ' ' + title
-    p Sortable extension for #[a(href='../tag-picker/index.html') Tag Picker]. This extension lets you sort the tag items both programmatically and manually by dragging them into the desired order.
-    hr
+    hgroup
+      h1
+        a(href='../tag-picker/index.html#extensions') &laquo;
+        = ' ' + title
+      p This extension lets you sort the tag items both programmatically and manually by dragging them into the desired order.
   main
-    form(method='get')
+    form(method='get' target='_blank')
       p(role='group')
         input(name='tags' placeholder!='Tags go here&hellip;' type='text' value='foo, bar, baz')
         = ' '
@@ -61,6 +66,8 @@ block content
     pre: code
       | const TagPicker = require('@taufik-nurrohman/tag-picker').default;
       | const TagPickerSort = require('@taufik-nurrohman/tag-picker.sort').default;
+      |
+      | // TODO: Sortable
       |
       | const picker = new TagPicker(document.querySelector('input'), {
       |     with: [TagPickerSort]

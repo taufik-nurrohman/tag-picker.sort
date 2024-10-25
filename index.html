@@ -9,6 +9,11 @@
     <link href="../layout/index.min.css" rel="stylesheet">
     <link href="../tag-picker/index.min.css" rel="stylesheet">
     <style>
+      body {
+        margin-left: auto;
+        margin-right: auto;
+        max-width: 60rem;
+      }
       .tag-picker {
         flex: 1;
       }
@@ -19,12 +24,13 @@
   </head>
   <body>
     <header>
-      <h1><a href="../tag-picker/index.html#extensions">&laquo;</a> Tag Picker Sort 1.0.0</h1>
-      <p>Sortable extension for <a href="../tag-picker/index.html">Tag Picker</a>. This extension lets you sort the tag items both programmatically and manually by dragging them into the desired order.</p>
-      <hr>
+      <hgroup>
+        <h1><a href="../tag-picker/index.html#extensions">&laquo;</a> Tag Picker Sort 1.0.0</h1>
+        <p>This extension lets you sort the tag items both programmatically and manually by dragging them into the desired order.</p>
+      </hgroup>
     </header>
     <main>
-      <form method="get">
+      <form method="get" target="_blank">
         <p role="group"><input name="tags" placeholder="Tags go here&hellip;" type="text" value="foo, bar, baz"> <button type="submit">Submit</button></p>
         <p role="group"><button onclick="return picker.reverse(), false;">Reverse</button> <button onclick="return picker.sort(), false;">Sort</button></p>
       </form>
@@ -41,6 +47,8 @@
       <h4>CommonJS</h4>
       <pre><code>const TagPicker = require('@taufik-nurrohman/tag-picker').default;
 const TagPickerSort = require('@taufik-nurrohman/tag-picker.sort').default;
+
+// TODO: Sortable
 
 const picker = new TagPicker(document.querySelector('input'), {
     with: [TagPickerSort]
