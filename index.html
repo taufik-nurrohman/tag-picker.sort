@@ -26,7 +26,7 @@
     <header>
       <hgroup>
         <h1><a href="../tag-picker/index.html#extensions">&laquo;</a> Tag Picker Sort 1.0.0</h1>
-        <p>This extension lets you sort the tag items both programmatically and manually by dragging them into the desired order.</p>
+        <p>This extension lets you sort the tag items both programmatically and manually by dragging them into the desired order. You need to load the <a href="https://sortablejs.github.io/Sortable" target="_blank"><code>Sortable</code></a> library for this to work.</p>
       </hgroup>
     </header>
     <main>
@@ -61,7 +61,7 @@ import TagPickerSort from '@taufik-nurrohman/tag-picker.sort';
 
 import Sortable from <a href="https://www.npmjs.com/package/sortablejs" target="_blank">'sortablejs'</a>;
 
-window.Sortable = Sortable; // Expose `Sortable` class to `window`
+window.Sortable = Sortable; // Expose `Sortable` class to `window` (optional)
 
 const picker = new TagPicker(document.querySelector('input'), {
     with: [TagPickerSort]
