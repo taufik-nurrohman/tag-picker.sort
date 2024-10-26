@@ -42,9 +42,6 @@
     var isNull = function isNull(x) {
         return null === x;
     };
-    var isNumber = function isNumber(x) {
-        return 'number' === typeof x;
-    };
     var isObject = function isObject(x, isPlain) {
         if (isPlain === void 0) {
             isPlain = true;
@@ -88,32 +85,36 @@
         }
         return "" + x;
     };
-    var D = document;
-    var W = window;
-    var getChildren = function getChildren(parent, index) {
-        var children = parent.children;
-        return isNumber(index) ? children[index] || null : children || [];
-    };
-    var getElements = function getElements(query, scope) {
-        return (scope || D).querySelectorAll(query);
-    };
     var letStyle = function letStyle(node, style) {
         return node.style[toCaseCamel(style)] = null, node;
     };
+    var setChildLast = function setChildLast(parent, node) {
+        return parent.append(node), node;
+    };
     var setStyle = function setStyle(node, style, value) {
-        if (isNumber(value)) {
-            value += 'px';
-        }
         return node.style[toCaseCamel(style)] = _fromValue(value), node;
     };
+    var debounce = function debounce(then, time) {
+        var timer;
+        return function () {
+            var _arguments = arguments,
+                _this = this;
+            timer && clearTimeout(timer);
+            timer = setTimeout(function () {
+                return then.apply(_this, _arguments);
+            }, time);
+        };
+    };
+    var bounce = debounce(function (picker) {
+        var _mask = picker._mask,
+            tags = _mask.tags,
+            text = _mask.text;
+        setChildLast(tags, text);
+    }, 0);
     var name = 'TagPicker.Sort';
     var references = new WeakMap();
-    var _Sortable = Sortable,
-        utils = _Sortable.utils;
-    // Some of the sortable code tweak(s) were taken from <https://github.com/SortableJS/Sortable/issues/347#issuecomment-93726446>
-    function forEachArray(array, then) {
-        array.forEach(then);
-    }
+    var _Sortable = Sortable;
+    _Sortable.utils;
 
     function getReference(key) {
         return references.get(key);
@@ -131,21 +132,7 @@
     }
 
     function onMove(e) {
-        var t = this,
-            _excludes = t._excludes,
-            _excludesPositions = t._excludesPositions;
-        W.clearTimeout(t._move);
-        t._move = W.setTimeout(function () {
-            var list = e.to;
-            forEachArray(_excludes, function (v, k) {
-                var i = _excludesPositions[k],
-                    j;
-                if (v !== getChildren(list, i)) {
-                    j = utils.index(v);
-                    list.insertBefore(v, getChildren(list, i + (j < i)));
-                }
-            });
-        });
+        bounce(this._picker);
     }
 
     function onSort(e) {
@@ -163,19 +150,8 @@
     }
 
     function onStart(e) {
-        var t = this,
-            excludes = [].slice.call(getElements(t.option('filter'), t.el)),
-            excludesPositions = excludes.map(function (v) {
-                return utils.index(v);
-            }),
-            from = e.from;
-        e.item;
-        e.items;
-        var to = e.to;
-        t._picker;
-        t._excludes = excludes;
-        t._excludesPositions = excludesPositions;
-        t._move = null;
+        var from = e.from,
+            to = e.to;
         from && setStyle(from, 'cursor', 'move');
         to && setStyle(to, 'cursor', 'move');
     }
@@ -225,9 +201,8 @@
             self.value = tags.join(join);
             return sortable.sort(tags.concat(text), true), $.fire('sort.tags', [tags]);
         });
-        var _mask = $._mask;
-        $.self;
-        var state = $.state,
+        var _mask = $._mask,
+            state = $.state,
             tags = _mask.tags,
             n = state.n;
         var n_tag_ = n + '__tag--';
@@ -243,8 +218,7 @@
             onMove: onMove,
             onSort: onSort,
             onStart: onStart,
-            selectedClass: n_tag_ + 'selected',
-            touchStartThreshold: 1
+            selectedClass: n_tag_ + 'selected'
         });
         sortable._picker = $;
         setReference($, sortable);

@@ -1,17 +1,18 @@
-import {W, getChildren, getElements, getNext, letStyle, setStyle} from '@taufik-nurrohman/document';
+import {W, getChildren, getElements, getNext, letStyle, setChildLast, setStyle} from '@taufik-nurrohman/document';
+import {debounce} from '@taufik-nurrohman/tick';
 import {isFunction} from '@taufik-nurrohman/is';
 import {toCount} from '@taufik-nurrohman/to';
+
+const bounce = debounce(picker => {
+    let {_mask} = picker,
+        {tags, text} = _mask;
+    setChildLast(tags, text);
+}, 0);
 
 const name = 'TagPicker.Sort';
 const references = new WeakMap;
 
 const {utils} = Sortable;
-
-// Some of the sortable code tweak(s) were taken from <https://github.com/SortableJS/Sortable/issues/347#issuecomment-93726446>
-
-function forEachArray(array, then) {
-    array.forEach(then);
-}
 
 function getReference(key) {
     return references.get(key);
@@ -28,19 +29,7 @@ function onEnd(e) {
 }
 
 function onMove(e) {
-    let t = this,
-        {_excludes, _excludesPositions} = t;
-    W.clearTimeout(t._move);
-    t._move = W.setTimeout(() => {
-        let list = e.to;
-        forEachArray(_excludes, (v, k) => {
-            let i = _excludesPositions[k], j;
-            if (v !== getChildren(list, i)) {
-                j = utils.index(v);
-                list.insertBefore(v, getChildren(list, i + (j < i)));
-            }
-        });
-    });
+    bounce(this._picker);
 }
 
 function onSort(e) {
@@ -55,14 +44,7 @@ function onSort(e) {
 }
 
 function onStart(e) {
-    let t = this,
-        excludes = [].slice.call(getElements(t.option('filter'), t.el)),
-        excludesPositions = excludes.map(v => utils.index(v)),
-        {from, item, items, to} = e,
-        picker = t._picker;
-    t._excludes = excludes;
-    t._excludesPositions = excludesPositions;
-    t._move = null;
+    let {from, to} = e;
     from && setStyle(from, 'cursor', 'move');
     to && setStyle(to, 'cursor', 'move');
 }
@@ -108,7 +90,7 @@ function attach() {
         self.value = tags.join(join);
         return sortable.sort(tags.concat(text), true), $.fire('sort.tags', [tags]);
     });
-    let {_mask, self, state} = $,
+    let {_mask, state} = $,
         {tags} = _mask,
         {n} = state;
     let n_tag_ = n + '__tag--';
@@ -124,8 +106,7 @@ function attach() {
         onMove,
         onSort,
         onStart,
-        selectedClass: n_tag_ + 'selected',
-        touchStartThreshold: 1
+        selectedClass: n_tag_ + 'selected'
     });
     sortable._picker = $;
     setReference($, sortable);

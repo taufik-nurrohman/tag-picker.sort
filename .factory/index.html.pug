@@ -102,7 +102,7 @@ block content
       | picker.sort();
     pre: code
       | picker.sort((a, b) => {
-      |     return a.title.localeCompare(b.title, undefined, {
+      |     return a.localeCompare(b, undefined, {
       |         numeric: true,
       |         sensitivity: 'base'
       |     });

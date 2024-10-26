@@ -75,7 +75,7 @@ const picker = new TagPicker(document.querySelector('input'), {
       <p>Sorts the current tag items in alphabetical order (by default).</p>
       <pre><code>picker.sort();</code></pre>
       <pre><code>picker.sort((a, b) => {
-    return a.title.localeCompare(b.title, undefined, {
+    return a.localeCompare(b, undefined, {
         numeric: true,
         sensitivity: 'base'
     });

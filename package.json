@@ -6,6 +6,7 @@
     "@taufik-nurrohman/document": "*",
     "@taufik-nurrohman/is": "*",
     "@taufik-nurrohman/tag-picker": "*",
+    "@taufik-nurrohman/tick": "*",
     "@taufik-nurrohman/to": "*"
   },
   "description": "Lets you sort the tag items both programmatically and manually by dragging them into the desired order.",
@@ -26,8 +27,14 @@
   },
   "homepage": "https://taufik-nurrohman.js.org/tag-picker.sort",
   "keywords": [
-    "tag",
-    "picker"
+    "draggable",
+    "order",
+    "orderable",
+    "picker",
+    "reverse",
+    "sort",
+    "sortable",
+    "tag"
   ],
   "license": "MIT",
   "main": "index.js",
