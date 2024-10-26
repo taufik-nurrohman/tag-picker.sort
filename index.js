@@ -91,6 +91,9 @@
     var setChildLast = function setChildLast(parent, node) {
         return parent.append(node), node;
     };
+    var setClass = function setClass(node, value) {
+        return node.classList.add(value), node;
+    };
     var setStyle = function setStyle(node, style, value) {
         return node.style[toCaseCamel(style)] = _fromValue(value), node;
     };
@@ -105,6 +108,15 @@
             }, time);
         };
     };
+    var delay = function delay(then, time) {
+        return function () {
+            var _arguments2 = arguments,
+                _this2 = this;
+            setTimeout(function () {
+                return then.apply(_this2, _arguments2);
+            }, time);
+        };
+    };
     var bounce = debounce(function (picker) {
         var _mask = picker._mask,
             tags = _mask.tags,
@@ -113,8 +125,6 @@
     }, 0);
     var name = 'TagPicker.Sort';
     var references = new WeakMap();
-    var _Sortable = Sortable;
-    _Sortable.utils;
 
     function getReference(key) {
         return references.get(key);
@@ -125,10 +135,20 @@
     }
 
     function onEnd(e) {
-        var from = e.from,
+        var t = this,
+            picker = t._picker,
+            _tags = picker._tags,
+            state = picker.state,
+            n = state.n,
+            from = e.from,
+            item = e.item,
             to = e.to;
         from && letStyle(from, 'cursor');
         to && letStyle(to, 'cursor');
+        item = _tags.get(item.title);
+        item && delay(function () {
+            return setClass(item, n + '__tag--selected').focus();
+        }, 0)();
     }
 
     function onMove(e) {
@@ -141,8 +161,9 @@
             picker = t._picker;
         picker._tags;
         var self = picker.self,
-            state = picker.state,
-            item = e.item;
+            state = picker.state;
+        state.n;
+        var item = e.item;
         var tags = t.toArray().slice(0, -1); // All but the last item (the `.tag-picker__text` item)
         self.value = tags.join(state.join);
         picker.fire('sort.tag', [v = item.title]).fire('change', [v]);

@@ -1,5 +1,5 @@
-import {W, getChildren, getElements, getNext, letStyle, setChildLast, setStyle} from '@taufik-nurrohman/document';
-import {debounce} from '@taufik-nurrohman/tick';
+import {W, getChildren, getElements, getNext, letStyle, setChildLast, setClass, setStyle} from '@taufik-nurrohman/document';
+import {debounce, delay} from '@taufik-nurrohman/tick';
 import {isFunction} from '@taufik-nurrohman/is';
 import {toCount} from '@taufik-nurrohman/to';
 
@@ -12,8 +12,6 @@ const bounce = debounce(picker => {
 const name = 'TagPicker.Sort';
 const references = new WeakMap;
 
-const {utils} = Sortable;
-
 function getReference(key) {
     return references.get(key);
 }
@@ -23,9 +21,15 @@ function letReference(key) {
 }
 
 function onEnd(e) {
-    let {from, to} = e;
+    let t = this,
+        picker = t._picker,
+        {_tags, state} = picker,
+        {n} = state,
+        {from, item, to} = e;
     from && letStyle(from, 'cursor');
     to && letStyle(to, 'cursor');
+    item = _tags.get(item.title);
+    item && delay(() => setClass(item, n + '__tag--selected').focus(), 0)();
 }
 
 function onMove(e) {
@@ -36,6 +40,7 @@ function onSort(e) {
     let t = this, v,
         picker = t._picker,
         {_tags, self, state} = picker,
+        {n} = state,
         {item} = e;
     let tags = t.toArray().slice(0, -1); // All but the last item (the `.tag-picker__text` item)
     self.value = tags.join(state.join);
