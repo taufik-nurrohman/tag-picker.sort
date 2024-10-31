@@ -137,12 +137,19 @@
     function onEnd(e) {
         var t = this,
             picker = t._picker,
+            _active = picker._active,
+            _mask = picker._mask,
             _tags = picker._tags,
             state = picker.state,
+            input = _mask.input,
             n = state.n,
             from = e.from,
             item = e.item,
             to = e.to;
+        if (!_active) {
+            return;
+        }
+        input.contentEditable = true;
         from && letStyle(from, 'cursor');
         to && letStyle(to, 'cursor');
         item = _tags.get(item.title);
@@ -152,18 +159,28 @@
     }
 
     function onMove(e) {
-        bounce(this._picker);
+        var t = this,
+            picker = t._picker,
+            _active = picker._active;
+        if (!_active) {
+            return;
+        }
+        bounce(picker);
     }
 
     function onSort(e) {
         var t = this,
             v,
-            picker = t._picker;
+            picker = t._picker,
+            _active = picker._active;
         picker._tags;
         var self = picker.self,
             state = picker.state;
         state.n;
         var item = e.item;
+        if (!_active) {
+            return;
+        }
         var tags = t.toArray().slice(0, -1); // All but the last item (the `.tag-picker__text` item)
         self.value = tags.join(state.join);
         picker.fire('sort.tag', [v = item.title]).fire('change', [v]);
@@ -171,8 +188,17 @@
     }
 
     function onStart(e) {
-        var from = e.from,
+        var t = this,
+            picker = t._picker,
+            _active = picker._active,
+            _mask = picker._mask,
+            input = _mask.input,
+            from = e.from,
             to = e.to;
+        if (!_active) {
+            return;
+        }
+        input.contentEditable = false;
         from && setStyle(from, 'cursor', 'move');
         to && setStyle(to, 'cursor', 'move');
     }

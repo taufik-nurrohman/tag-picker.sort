@@ -23,9 +23,14 @@ function letReference(key) {
 function onEnd(e) {
     let t = this,
         picker = t._picker,
-        {_tags, state} = picker,
+        {_active, _mask, _tags, state} = picker,
+        {input} = _mask,
         {n} = state,
         {from, item, to} = e;
+    if (!_active) {
+        return;
+    }
+    input.contentEditable = true;
     from && letStyle(from, 'cursor');
     to && letStyle(to, 'cursor');
     item = _tags.get(item.title);
@@ -33,15 +38,24 @@ function onEnd(e) {
 }
 
 function onMove(e) {
-    bounce(this._picker);
+    let t = this,
+        picker = t._picker,
+        {_active} = picker;
+    if (!_active) {
+        return;
+    }
+    bounce(picker);
 }
 
 function onSort(e) {
     let t = this, v,
         picker = t._picker,
-        {_tags, self, state} = picker,
+        {_active, _tags, self, state} = picker,
         {n} = state,
         {item} = e;
+    if (!_active) {
+        return;
+    }
     let tags = t.toArray().slice(0, -1); // All but the last item (the `.tag-picker__text` item)
     self.value = tags.join(state.join);
     picker.fire('sort.tag', [v = item.title]).fire('change', [v]);
@@ -49,7 +63,15 @@ function onSort(e) {
 }
 
 function onStart(e) {
-    let {from, to} = e;
+    let t = this,
+        picker = t._picker,
+        {_active, _mask} = picker,
+        {input} = _mask,
+        {from, to} = e;
+    if (!_active) {
+        return;
+    }
+    input.contentEditable = false;
     from && setStyle(from, 'cursor', 'move');
     to && setStyle(to, 'cursor', 'move');
 }
