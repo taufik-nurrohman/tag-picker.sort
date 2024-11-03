@@ -1,13 +1,6 @@
-import {W, getChildren, getElements, getNext, letStyle, setChildLast, setClass, setStyle} from '@taufik-nurrohman/document';
-import {debounce, delay} from '@taufik-nurrohman/tick';
+import {W, getChildren, getElements, getNext, getParent, letStyle, setChildLast, setClass, setStyle} from '@taufik-nurrohman/document';
 import {isFunction} from '@taufik-nurrohman/is';
 import {toCount} from '@taufik-nurrohman/to';
-
-const bounce = debounce(picker => {
-    let {_mask} = picker,
-        {tags, text} = _mask;
-    setChildLast(tags, text);
-}, 0);
 
 const name = 'TagPicker.Sort';
 const references = new WeakMap;
@@ -23,34 +16,32 @@ function letReference(key) {
 function onEnd(e) {
     let t = this,
         picker = t._picker,
-        {_active, _mask, _tags, state} = picker,
-        {input} = _mask,
-        {n} = state,
-        {from, item, to} = e;
+        {_active} = picker,
+        {from, to} = e;
     if (!_active) {
         return;
     }
-    input.contentEditable = true;
     from && letStyle(from, 'cursor');
     to && letStyle(to, 'cursor');
-    item = _tags.get(item.title);
-    item && delay(() => setClass(item, n + '__tag--selected').focus(), 0)();
 }
 
 function onMove(e) {
     let t = this,
         picker = t._picker,
-        {_active} = picker;
+        {_active, _mask} = picker,
+        {text} = _mask;
     if (!_active) {
         return;
     }
-    bounce(picker);
+    if (e.related === text) {
+        return false;
+    }
 }
 
 function onSort(e) {
     let t = this, v,
         picker = t._picker,
-        {_active, _tags, self, state} = picker,
+        {_active, self, state} = picker,
         {n} = state,
         {item} = e;
     if (!_active) {
@@ -65,13 +56,11 @@ function onSort(e) {
 function onStart(e) {
     let t = this,
         picker = t._picker,
-        {_active, _mask} = picker,
-        {input} = _mask,
+        {_active} = picker,
         {from, to} = e;
     if (!_active) {
         return;
     }
-    input.contentEditable = false;
     from && setStyle(from, 'cursor', 'move');
     to && setStyle(to, 'cursor', 'move');
 }
@@ -127,7 +116,6 @@ function attach() {
         dataIdAttr: 'title',
         dragClass: n_tag_ + 'move',
         filter: '.' + n + '__text',
-        forceFallback: true,
         ghostClass: n_tag_ + 'ghost',
         onEnd,
         onMove,

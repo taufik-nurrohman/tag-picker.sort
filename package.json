@@ -6,7 +6,6 @@
     "@taufik-nurrohman/document": "*",
     "@taufik-nurrohman/is": "*",
     "@taufik-nurrohman/tag-picker": "*",
-    "@taufik-nurrohman/tick": "*",
     "@taufik-nurrohman/to": "*"
   },
   "description": "Lets you sort the tag items both programmatically and manually by dragging them into the desired order.",

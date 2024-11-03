@@ -36,8 +36,12 @@
     var isFunction = function isFunction(x) {
         return 'function' === typeof x;
     };
-    var isInstance = function isInstance(x, of) {
-        return x && isSet(of) && x instanceof of ;
+    var isInstance = function isInstance(x, of, exact) {
+        if (!x || 'object' !== typeof x) {
+            return false;
+        } {
+            return isSet(of) && isSet(x.constructor) && of === x.constructor;
+        }
     };
     var isNull = function isNull(x) {
         return null === x;
@@ -46,7 +50,7 @@
         if (isPlain === void 0) {
             isPlain = true;
         }
-        if ('object' !== typeof x) {
+        if (!x || 'object' !== typeof x) {
             return false;
         }
         return isPlain ? isInstance(x, Object) : true;
@@ -88,41 +92,9 @@
     var letStyle = function letStyle(node, style) {
         return node.style[toCaseCamel(style)] = null, node;
     };
-    var setChildLast = function setChildLast(parent, node) {
-        return parent.append(node), node;
-    };
-    var setClass = function setClass(node, value) {
-        return node.classList.add(value), node;
-    };
     var setStyle = function setStyle(node, style, value) {
         return node.style[toCaseCamel(style)] = _fromValue(value), node;
     };
-    var debounce = function debounce(then, time) {
-        var timer;
-        return function () {
-            var _arguments = arguments,
-                _this = this;
-            timer && clearTimeout(timer);
-            timer = setTimeout(function () {
-                return then.apply(_this, _arguments);
-            }, time);
-        };
-    };
-    var delay = function delay(then, time) {
-        return function () {
-            var _arguments2 = arguments,
-                _this2 = this;
-            setTimeout(function () {
-                return then.apply(_this2, _arguments2);
-            }, time);
-        };
-    };
-    var bounce = debounce(function (picker) {
-        var _mask = picker._mask,
-            tags = _mask.tags,
-            text = _mask.text;
-        setChildLast(tags, text);
-    }, 0);
     var name = 'TagPicker.Sort';
     var references = new WeakMap();
 
@@ -138,43 +110,35 @@
         var t = this,
             picker = t._picker,
             _active = picker._active,
-            _mask = picker._mask,
-            _tags = picker._tags,
-            state = picker.state,
-            input = _mask.input,
-            n = state.n,
             from = e.from,
-            item = e.item,
             to = e.to;
         if (!_active) {
             return;
         }
-        input.contentEditable = true;
         from && letStyle(from, 'cursor');
         to && letStyle(to, 'cursor');
-        item = _tags.get(item.title);
-        item && delay(function () {
-            return setClass(item, n + '__tag--selected').focus();
-        }, 0)();
     }
 
     function onMove(e) {
         var t = this,
             picker = t._picker,
-            _active = picker._active;
+            _active = picker._active,
+            _mask = picker._mask,
+            text = _mask.text;
         if (!_active) {
             return;
         }
-        bounce(picker);
+        if (e.related === text) {
+            return false;
+        }
     }
 
     function onSort(e) {
         var t = this,
             v,
             picker = t._picker,
-            _active = picker._active;
-        picker._tags;
-        var self = picker.self,
+            _active = picker._active,
+            self = picker.self,
             state = picker.state;
         state.n;
         var item = e.item;
@@ -191,14 +155,11 @@
         var t = this,
             picker = t._picker,
             _active = picker._active,
-            _mask = picker._mask,
-            input = _mask.input,
             from = e.from,
             to = e.to;
         if (!_active) {
             return;
         }
-        input.contentEditable = false;
         from && setStyle(from, 'cursor', 'move');
         to && setStyle(to, 'cursor', 'move');
     }
@@ -259,7 +220,6 @@
             dataIdAttr: 'title',
             dragClass: n_tag_ + 'move',
             filter: '.' + n + '__text',
-            forceFallback: true,
             ghostClass: n_tag_ + 'ghost',
             onEnd: onEnd,
             onMove: onMove,
