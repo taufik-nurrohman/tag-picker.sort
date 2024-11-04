@@ -5,6 +5,24 @@ import {toCount} from '@taufik-nurrohman/to';
 const name = 'TagPicker.Sort';
 const references = new WeakMap;
 
+function createSortable(tags, n, onEnd, onMove, onSort, onStart) {
+    let n_tag_ = n += '__tag--';
+    return new Sortable(tags, {
+        animation: 150,
+        chosenClass: n_tag_ + 'select',
+        dataIdAttr: 'title',
+        dragClass: n_tag_ + 'move',
+        filter: '.' + n + '__text',
+        forceFallback: true,
+        ghostClass: n_tag_ + 'ghost',
+        onEnd,
+        onMove,
+        onSort,
+        onStart,
+        selectedClass: n_tag_ + 'selected'
+    });
+}
+
 function getReference(key) {
     return references.get(key);
 }
@@ -14,15 +32,21 @@ function letReference(key) {
 }
 
 function onEnd(e) {
-    let t = this,
-        picker = t._picker,
-        {_active} = picker,
-        {from, to} = e;
-    if (!_active) {
-        return;
-    }
+    let {from, to} = e;
     from && letStyle(from, 'cursor');
     to && letStyle(to, 'cursor');
+}
+
+function onLetTag() {
+    let $ = this,
+        {_mask, state} = $,
+        {n} = state,
+        {tags} = _mask,
+        sortable = getReference($);
+    sortable && sortable.destroy();
+    sortable = createSortable(tags, n, onEnd, onMove, onSort, onStart);
+    sortable._picker = $;
+    setReference($, sortable);
 }
 
 function onMove(e) {
@@ -33,24 +57,23 @@ function onMove(e) {
     if (!_active) {
         return;
     }
-    if (e.related === text) {
-        return false;
-    }
+    return e.related !== text;
 }
 
 function onSort(e) {
     let t = this, v,
         picker = t._picker,
-        {_active, self, state} = picker,
-        {n} = state,
+        {_active, _mask, self, state} = picker,
+        {tags} = _mask,
         {item} = e;
     if (!_active) {
         return;
     }
-    let tags = t.toArray().slice(0, -1); // All but the last item (the `.tag-picker__text` item)
-    self.value = tags.join(state.join);
+    let _tags = t.toArray().slice(0, -1); // All but the last item (the `.tag-picker__text` item)
+    self.value = _tags.join(state.join);
     picker.fire('sort.tag', [v = item.title]).fire('change', [v]);
     picker.value = picker.value; // Refresh!
+    letStyle(tags, 'cursor');
 }
 
 function onStart(e) {
@@ -109,30 +132,18 @@ function attach() {
     let {_mask, state} = $,
         {tags} = _mask,
         {n} = state;
-    let n_tag_ = n + '__tag--';
-    const sortable = new Sortable(tags, {
-        animation: 150,
-        chosenClass: n_tag_ + 'select',
-        dataIdAttr: 'title',
-        dragClass: n_tag_ + 'move',
-        filter: '.' + n + '__text',
-        ghostClass: n_tag_ + 'ghost',
-        onEnd,
-        onMove,
-        onSort,
-        onStart,
-        selectedClass: n_tag_ + 'selected'
-    });
+    let sortable = createSortable(tags, n, onEnd, onMove, onSort, onStart);
     sortable._picker = $;
     setReference($, sortable);
-    return $;
+    return $.on('let.tag', onLetTag);
 }
 
 function detach() {
     let $ = this,
         sortable = getReference($);
-    letReference($);
     sortable && sortable.destroy();
+    letReference($);
+    return $.off('let.tag', onLetTag);
 }
 
 export default {attach, detach, name};

@@ -36,12 +36,8 @@
     var isFunction = function isFunction(x) {
         return 'function' === typeof x;
     };
-    var isInstance = function isInstance(x, of, exact) {
-        if (!x || 'object' !== typeof x) {
-            return false;
-        } {
-            return isSet(of) && isSet(x.constructor) && of === x.constructor;
-        }
+    var isInstance = function isInstance(x, of) {
+        return x && isSet(of) && x instanceof of ;
     };
     var isNull = function isNull(x) {
         return null === x;
@@ -50,7 +46,7 @@
         if (isPlain === void 0) {
             isPlain = true;
         }
-        if (!x || 'object' !== typeof x) {
+        if ('object' !== typeof x) {
             return false;
         }
         return isPlain ? isInstance(x, Object) : true;
@@ -98,6 +94,24 @@
     var name = 'TagPicker.Sort';
     var references = new WeakMap();
 
+    function createSortable(tags, n, onEnd, onMove, onSort, onStart) {
+        var n_tag_ = n += '__tag--';
+        return new Sortable(tags, {
+            animation: 150,
+            chosenClass: n_tag_ + 'select',
+            dataIdAttr: 'title',
+            dragClass: n_tag_ + 'move',
+            filter: '.' + n + '__text',
+            forceFallback: true,
+            ghostClass: n_tag_ + 'ghost',
+            onEnd: onEnd,
+            onMove: onMove,
+            onSort: onSort,
+            onStart: onStart,
+            selectedClass: n_tag_ + 'selected'
+        });
+    }
+
     function getReference(key) {
         return references.get(key);
     }
@@ -107,16 +121,23 @@
     }
 
     function onEnd(e) {
-        var t = this,
-            picker = t._picker,
-            _active = picker._active,
-            from = e.from,
+        var from = e.from,
             to = e.to;
-        if (!_active) {
-            return;
-        }
         from && letStyle(from, 'cursor');
         to && letStyle(to, 'cursor');
+    }
+
+    function onLetTag() {
+        var $ = this,
+            _mask = $._mask,
+            state = $.state,
+            n = state.n,
+            tags = _mask.tags,
+            sortable = getReference($);
+        sortable && sortable.destroy();
+        sortable = createSortable(tags, n, onEnd, onMove, onSort, onStart);
+        sortable._picker = $;
+        setReference($, sortable);
     }
 
     function onMove(e) {
@@ -128,9 +149,7 @@
         if (!_active) {
             return;
         }
-        if (e.related === text) {
-            return false;
-        }
+        return e.related !== text;
     }
 
     function onSort(e) {
@@ -138,17 +157,19 @@
             v,
             picker = t._picker,
             _active = picker._active,
+            _mask = picker._mask,
             self = picker.self,
-            state = picker.state;
-        state.n;
-        var item = e.item;
+            state = picker.state,
+            tags = _mask.tags,
+            item = e.item;
         if (!_active) {
             return;
         }
-        var tags = t.toArray().slice(0, -1); // All but the last item (the `.tag-picker__text` item)
-        self.value = tags.join(state.join);
+        var _tags = t.toArray().slice(0, -1); // All but the last item (the `.tag-picker__text` item)
+        self.value = _tags.join(state.join);
         picker.fire('sort.tag', [v = item.title]).fire('change', [v]);
         picker.value = picker.value; // Refresh!
+        letStyle(tags, 'cursor');
     }
 
     function onStart(e) {
@@ -213,30 +234,18 @@
             state = $.state,
             tags = _mask.tags,
             n = state.n;
-        var n_tag_ = n + '__tag--';
-        var sortable = new Sortable(tags, {
-            animation: 150,
-            chosenClass: n_tag_ + 'select',
-            dataIdAttr: 'title',
-            dragClass: n_tag_ + 'move',
-            filter: '.' + n + '__text',
-            ghostClass: n_tag_ + 'ghost',
-            onEnd: onEnd,
-            onMove: onMove,
-            onSort: onSort,
-            onStart: onStart,
-            selectedClass: n_tag_ + 'selected'
-        });
+        var sortable = createSortable(tags, n, onEnd, onMove, onSort, onStart);
         sortable._picker = $;
         setReference($, sortable);
-        return $;
+        return $.on('let.tag', onLetTag);
     }
 
     function detach() {
         var $ = this,
             sortable = getReference($);
-        letReference($);
         sortable && sortable.destroy();
+        letReference($);
+        return $.off('let.tag', onLetTag);
     }
     var index_js = {
         attach: attach,
