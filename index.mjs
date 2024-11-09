@@ -5,7 +5,11 @@ import {toCount} from '@taufik-nurrohman/to';
 const name = 'TagPicker.Sort';
 const references = new WeakMap;
 
-function createSortable(tags, n, onEnd, onMove, onSort, onStart) {
+function createSortable($, onEnd, onMove, onSort, onStart) {
+    let {_mask, state} = $,
+        {n} = state,
+        {tags} = _mask,
+        Sortable = $.constructor.$.Sortable || W.Sortable;
     let n_tag_ = n += '__tag--';
     return new Sortable(tags, {
         animation: 150,
@@ -39,12 +43,9 @@ function onEnd(e) {
 
 function onLetTag() {
     let $ = this,
-        {_mask, state} = $,
-        {n} = state,
-        {tags} = _mask,
         sortable = getReference($);
     sortable && sortable.destroy();
-    sortable = createSortable(tags, n, onEnd, onMove, onSort, onStart);
+    sortable = createSortable($, onEnd, onMove, onSort, onStart);
     sortable._picker = $;
     setReference($, sortable);
 }
@@ -94,7 +95,9 @@ function setReference(key, value) {
 
 function attach() {
     const $ = this;
-    const $$ = $.constructor.prototype;
+    const $constructor = $.constructor;
+    const $$ = $constructor.prototype;
+    $constructor.$ = $constructor.$ || {};
     !isFunction($$.reverse) && ($$.reverse = function () {
         let $ = this,
             sortable = getReference($),
@@ -129,10 +132,7 @@ function attach() {
         self.value = tags.join(join);
         return sortable.sort(tags.concat(text), true), $.fire('sort.tags', [tags]);
     });
-    let {_mask, state} = $,
-        {tags} = _mask,
-        {n} = state;
-    let sortable = createSortable(tags, n, onEnd, onMove, onSort, onStart);
+    let sortable = createSortable($, onEnd, onMove, onSort, onStart);
     sortable._picker = $;
     setReference($, sortable);
     return $.on('let.tag', onLetTag);

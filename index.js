@@ -85,6 +85,7 @@
         }
         return "" + x;
     };
+    var W = window;
     var letStyle = function letStyle(node, style) {
         return node.style[toCaseCamel(style)] = null, node;
     };
@@ -94,7 +95,12 @@
     var name = 'TagPicker.Sort';
     var references = new WeakMap();
 
-    function createSortable(tags, n, onEnd, onMove, onSort, onStart) {
+    function createSortable($, onEnd, onMove, onSort, onStart) {
+        var _mask = $._mask,
+            state = $.state,
+            n = state.n,
+            tags = _mask.tags,
+            Sortable = $.constructor.$.Sortable || W.Sortable;
         var n_tag_ = n += '__tag--';
         return new Sortable(tags, {
             animation: 150,
@@ -129,13 +135,9 @@
 
     function onLetTag() {
         var $ = this,
-            _mask = $._mask,
-            state = $.state,
-            n = state.n,
-            tags = _mask.tags,
             sortable = getReference($);
         sortable && sortable.destroy();
-        sortable = createSortable(tags, n, onEnd, onMove, onSort, onStart);
+        sortable = createSortable($, onEnd, onMove, onSort, onStart);
         sortable._picker = $;
         setReference($, sortable);
     }
@@ -191,7 +193,9 @@
 
     function attach() {
         var $ = this;
-        var $$ = $.constructor.prototype;
+        var $constructor = $.constructor;
+        var $$ = $constructor.prototype;
+        $constructor.$ = $constructor.$ || {};
         !isFunction($$.reverse) && ($$.reverse = function () {
             var $ = this,
                 sortable = getReference($),
@@ -230,11 +234,7 @@
             self.value = tags.join(join);
             return sortable.sort(tags.concat(text), true), $.fire('sort.tags', [tags]);
         });
-        var _mask = $._mask,
-            state = $.state,
-            tags = _mask.tags,
-            n = state.n;
-        var sortable = createSortable(tags, n, onEnd, onMove, onSort, onStart);
+        var sortable = createSortable($, onEnd, onMove, onSort, onStart);
         sortable._picker = $;
         setReference($, sortable);
         return $.on('let.tag', onLetTag);
