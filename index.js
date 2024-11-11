@@ -42,6 +42,9 @@
     var isNull = function isNull(x) {
         return null === x;
     };
+    var isNumeric = function isNumeric(x) {
+        return /^-?(?:\d*.)?\d+$/.test(x + "");
+    };
     var isObject = function isObject(x, isPlain) {
         if (isPlain === void 0) {
             isPlain = true;
@@ -61,6 +64,45 @@
     };
     var toCaseUpper = function toCaseUpper(x) {
         return x.toUpperCase();
+    };
+    var toNumber = function toNumber(x, base) {
+        if (base === void 0) {
+            base = 10;
+        }
+        return base ? parseInt(x, base) : parseFloat(x);
+    };
+    var _toValue = function toValue(x) {
+        if (isArray(x)) {
+            return x.map(function (v) {
+                return _toValue(v);
+            });
+        }
+        if (isNumeric(x)) {
+            return toNumber(x);
+        }
+        if (isObject(x)) {
+            for (var k in x) {
+                x[k] = _toValue(x[k]);
+            }
+            return x;
+        }
+        if ('false' === x) {
+            return false;
+        }
+        if ('null' === x) {
+            return null;
+        }
+        if ('true' === x) {
+            return true;
+        }
+        return x;
+    };
+    var fromJSON = function fromJSON(x) {
+        var value = null;
+        try {
+            value = JSON.parse(x);
+        } catch (e) {}
+        return value;
     };
     var _fromValue = function fromValue(x) {
         if (isArray(x)) {
@@ -85,7 +127,30 @@
         }
         return "" + x;
     };
-    var W = window;
+    var getAttribute = function getAttribute(node, attribute, parseValue) {
+        if (parseValue === void 0) {
+            parseValue = true;
+        }
+        if (!hasAttribute(node, attribute)) {
+            return null;
+        }
+        var value = node.getAttribute(attribute);
+        return parseValue ? _toValue(value) : value;
+    };
+    var getDatum = function getDatum(node, datum, parseValue) {
+        if (parseValue === void 0) {
+            parseValue = true;
+        }
+        var value = getAttribute(node, 'data-' + datum, parseValue),
+            v = (value + "").trim();
+        if (parseValue && v && ('[' === v[0] && ']' === v.slice(-1) || '{' === v[0] && '}' === v.slice(-1)) && null !== (v = fromJSON(value))) {
+            return v;
+        }
+        return value;
+    };
+    var hasAttribute = function hasAttribute(node, attribute) {
+        return node.hasAttribute(attribute);
+    };
     var letStyle = function letStyle(node, style) {
         return node.style[toCaseCamel(style)] = null, node;
     };
@@ -99,13 +164,12 @@
         var _mask = $._mask,
             state = $.state,
             n = state.n,
-            tags = _mask.tags,
-            Sortable = $.constructor.$.Sortable || W.Sortable;
+            tags = _mask.tags;
         var n_tag_ = n += '__tag--';
         return new Sortable(tags, {
             animation: 150,
             chosenClass: n_tag_ + 'select',
-            dataIdAttr: 'title',
+            dataIdAttr: 'data-name',
             dragClass: n_tag_ + 'move',
             filter: '.' + n + '__text',
             forceFallback: true,
@@ -169,7 +233,7 @@
         }
         var _tags = t.toArray().slice(0, -1); // All but the last item (the `.tag-picker__text` item)
         self.value = _tags.join(state.join);
-        picker.fire('sort.tag', [v = item.title]).fire('change', [v]);
+        picker.fire('sort.tag', [v = getDatum(item, 'name')]).fire('change', [v]);
         picker.value = picker.value; // Refresh!
         letStyle(tags, 'cursor');
     }
@@ -193,9 +257,7 @@
 
     function attach() {
         var $ = this;
-        var $constructor = $.constructor;
-        var $$ = $constructor.prototype;
-        $constructor.$ = $constructor.$ || {};
+        var $$ = $.constructor.prototype;
         !isFunction($$.reverse) && ($$.reverse = function () {
             var $ = this,
                 sortable = getReference($),
