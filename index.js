@@ -191,8 +191,12 @@
     }
 
     function onEnd(e) {
-        var from = e.from,
+        var $ = this,
+            sortable = getReference($),
+            picker = sortable._picker,
+            from = e.from,
             to = e.to;
+        picker._event = e;
         from && letStyle(from, 'cursor');
         to && letStyle(to, 'cursor');
     }
@@ -215,6 +219,7 @@
         if (!_active) {
             return;
         }
+        picker._event = e;
         return e.related !== text;
     }
 
@@ -231,9 +236,10 @@
         if (!_active) {
             return;
         }
+        picker._event = e;
         var _tags = t.toArray().slice(0, -1); // All but the last item (the `.tag-picker__text` item)
         self.value = _tags.join(state.join);
-        picker.fire('sort.tag', [v = getDatum(item, 'name')]).fire('change', [v]);
+        picker.fire('sort.tag', [e, v = getDatum(item, 'name')]).fire('change', [e, v]);
         picker.value = picker.value; // Refresh!
         letStyle(tags, 'cursor');
     }
@@ -247,6 +253,7 @@
         if (!_active) {
             return;
         }
+        picker._event = e;
         from && setStyle(from, 'cursor', 'move');
         to && setStyle(to, 'cursor', 'move');
     }
@@ -262,6 +269,7 @@
             var $ = this,
                 sortable = getReference($),
                 _active = $._active,
+                _event = $._event,
                 self = $.self,
                 state = $.state,
                 join = state.join;
@@ -272,12 +280,13 @@
                 text = tags.pop();
             tags = tags.reverse();
             self.value = tags.join(join);
-            return sortable.sort(tags.concat(text), true), $.fire('sort.tags', [tags]);
+            return sortable.sort(tags.concat(text), true), $.fire('sort.tags', [_event, tags]);
         });
         !isFunction($$.sort) && ($$.sort = function (method) {
             var $ = this,
                 sortable = getReference($),
                 _active = $._active,
+                _event = $._event,
                 self = $.self,
                 state = $.state,
                 join = state.join;
@@ -294,7 +303,7 @@
                 text = tags.pop();
             tags = tags.sort(method);
             self.value = tags.join(join);
-            return sortable.sort(tags.concat(text), true), $.fire('sort.tags', [tags]);
+            return sortable.sort(tags.concat(text), true), $.fire('sort.tags', [_event, tags]);
         });
         var sortable = createSortable($, onEnd, onMove, onSort, onStart);
         sortable._picker = $;
