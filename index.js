@@ -264,7 +264,7 @@
 
     function attach() {
         var $ = this;
-        var $$ = $.constructor.prototype;
+        var $$ = $.constructor._;
         !isFunction($$.reverse) && ($$.reverse = function () {
             var $ = this,
                 sortable = getReference($),

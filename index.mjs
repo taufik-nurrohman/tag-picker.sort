@@ -101,7 +101,7 @@ function setReference(key, value) {
 
 function attach() {
     const $ = this;
-    const $$ = $.constructor.prototype;
+    const $$ = $.constructor._;
     !isFunction($$.reverse) && ($$.reverse = function () {
         let $ = this,
             sortable = getReference($),
