@@ -97,13 +97,6 @@
         }
         return x;
     };
-    var fromJSON = function fromJSON(x) {
-        var value = null;
-        try {
-            value = JSON.parse(x);
-        } catch (e) {}
-        return value;
-    };
     var _fromValue = function fromValue(x) {
         if (isArray(x)) {
             return x.map(function (v) {
@@ -138,14 +131,8 @@
         return parseValue ? _toValue(value) : value;
     };
     var getDatum = function getDatum(node, datum, parseValue) {
-        if (parseValue === void 0) {
-            parseValue = true;
-        }
-        var value = getAttribute(node, 'data-' + datum, parseValue),
-            v = (value + "").trim();
-        if (parseValue && v && ('[' === v[0] && ']' === v.slice(-1) || '{' === v[0] && '}' === v.slice(-1)) && null !== (v = fromJSON(value))) {
-            return v;
-        }
+        var value = getAttribute(node, 'data-' + datum, parseValue);
+        (value + "").trim();
         return value;
     };
     var hasAttribute = function hasAttribute(node, attribute) {
@@ -169,7 +156,7 @@
         return new Sortable(tags, {
             animation: 150,
             chosenClass: n_tag_ + 'select',
-            dataIdAttr: 'data-name',
+            dataIdAttr: 'data-value',
             dragClass: n_tag_ + 'move',
             filter: '.' + n + '__text',
             forceFallback: true,
@@ -239,7 +226,7 @@
         picker._event = e;
         var _tags = t.toArray().slice(0, -1); // All but the last item (the `.tag-picker__text` item)
         self.value = _tags.join(state.join);
-        picker.fire('sort.tag', [e, v = getDatum(item, 'name')]).fire('change', [e, v]);
+        picker.fire('sort.tag', [e, v = getDatum(item, 'value', false)]).fire('change', [e, v]);
         picker.value = picker.value; // Refresh!
         letStyle(tags, 'cursor');
     }

@@ -13,7 +13,7 @@ function createSortable($, onEnd, onMove, onSort, onStart) {
     return new Sortable(tags, {
         animation: 150,
         chosenClass: n_tag_ + 'select',
-        dataIdAttr: 'data-name',
+        dataIdAttr: 'data-value',
         dragClass: n_tag_ + 'move',
         filter: '.' + n + '__text',
         forceFallback: true,
@@ -77,7 +77,7 @@ function onSort(e) {
     picker._event = e;
     let _tags = t.toArray().slice(0, -1); // All but the last item (the `.tag-picker__text` item)
     self.value = _tags.join(state.join);
-    picker.fire('sort.tag', [e, v = getDatum(item, 'name')]).fire('change', [e, v]);
+    picker.fire('sort.tag', [e, v = getDatum(item, 'value', false)]).fire('change', [e, v]);
     picker.value = picker.value; // Refresh!
     letStyle(tags, 'cursor');
 }
