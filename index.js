@@ -173,6 +173,25 @@
     var toCaseUpper = function toCaseUpper(x) {
         return x.toUpperCase();
     };
+    var toCount = function toCount(x) {
+        return x.length;
+    };
+    var forEachArray = function forEachArray(array, at) {
+        for (var i = 0, j = toCount(array), v; i < j; ++i) {
+            v = at(array[i], i);
+            if (-1 === v) {
+                array.splice(i, 1);
+                continue;
+            }
+            if (0 === v) {
+                break;
+            }
+            if (1 === v) {
+                continue;
+            }
+        }
+        return array;
+    };
     var forEachMap = function forEachMap(map, at) {
         for (var _iterator = _createForOfIteratorHelperLoose(map), _step; !(_step = _iterator()).done;) {
             var _step$value = _maybeArrayLike(_slicedToArray, _step.value, 2),
@@ -209,19 +228,50 @@
         }
         return object;
     };
+    var getReference = function getReference(key) {
+        return getValueInMap(key, references) || null;
+    };
+    var getValueInMap = function getValueInMap(k, map) {
+        return map.get(k);
+    };
+    var letReference = function letReference(k) {
+        return letValueInMap(k, references);
+    };
     var letValueInMap = function letValueInMap(k, map) {
         return map.delete(k);
     };
+    var setReference = function setReference(key, value) {
+        return setValueInMap(key, value, references);
+    };
+    var setValueInMap = function setValueInMap(k, v, map) {
+        return map.set(k, v);
+    };
+    var references = new WeakMap();
+
+    function _toArray(iterable) {
+        return Array.from(iterable);
+    }
     var D = document;
+    var W = window;
     var B = D.body;
+    var R = D.documentElement;
+    var getElements = function getElements(query, scope) {
+        return _toArray((scope || D).querySelectorAll(query));
+    };
     var getParent = function getParent(node, query) {
         if (query) {
             return node.closest(query) || null;
         }
         return node.parentNode || null;
     };
+    var getPrev = function getPrev(node, anyNode) {
+        return node['previous' + (anyNode ? "" : 'Element') + 'Sibling'] || null;
+    };
     var hasClass = function hasClass(node, value) {
         return node.classList.contains(value);
+    };
+    var isWindow = function isWindow(node) {
+        return node === W;
     };
     var letAttribute = function letAttribute(node, attribute) {
         return node.removeAttribute(attribute), node;
@@ -239,6 +289,12 @@
     var setChildLast = function setChildLast(parent, node) {
         return parent.append(node), node;
     };
+    var setNext = function setNext(current, node) {
+        return current.after(node), node;
+    };
+    var setPrev = function setPrev(current, node) {
+        return current.before(node), node;
+    };
     var setStyle = function setStyle(node, style, value) {
         if (isNumber(value)) {
             value += 'px';
@@ -249,6 +305,30 @@
         return forEachObject(styles, function (v, k) {
             v || "" === v || 0 === v ? setStyle(node, k, v) : letStyle(node, k);
         }), node;
+    };
+    var setValue = function setValue(node, value) {
+        if (null === value) {
+            return letAttribute(node, 'value');
+        }
+        return node.value = _fromValue(value), node;
+    };
+    var getRect = function getRect(node) {
+        var h, rect, w, x, y, X, Y;
+        if (isWindow(node)) {
+            x = node.pageXOffset || R.scrollLeft || B.scrollLeft;
+            y = node.pageYOffset || R.scrollTop || B.scrollTop;
+            w = node.innerWidth;
+            h = node.innerHeight;
+        } else {
+            rect = node.getBoundingClientRect();
+            x = rect.left;
+            y = rect.top;
+            w = rect.width;
+            h = rect.height;
+            X = rect.right;
+            Y = rect.bottom;
+        }
+        return [x, y, w, h, X, Y];
     };
     var offEvent = function offEvent(name, node, then) {
         node.removeEventListener(name, then);
@@ -263,6 +343,17 @@
         node.addEventListener(name, then, options);
     };
     var name = 'TagPicker.Sort';
+    var EVENT_DOWN = 'down';
+    var EVENT_MOVE = 'move';
+    var EVENT_UP = 'up';
+    var EVENT_MOUSE = 'mouse';
+    var EVENT_MOUSE_DOWN = EVENT_MOUSE + EVENT_DOWN;
+    var EVENT_MOUSE_MOVE = EVENT_MOUSE + EVENT_MOVE;
+    var EVENT_MOUSE_UP = EVENT_MOUSE + EVENT_UP;
+    var EVENT_TOUCH = 'touch';
+    var EVENT_TOUCH_END = EVENT_TOUCH + 'end';
+    var EVENT_TOUCH_MOVE = EVENT_TOUCH + EVENT_MOVE;
+    var EVENT_TOUCH_START = EVENT_TOUCH + 'start';
 
     function attach(self, state) {
         var $ = this,
@@ -270,26 +361,62 @@
         $._mask;
         var _tags = $._tags;
         forEachMap(_tags, function (v) {
-            onEvent('mousedown', v[2], onPointerDownTag);
+            v = v[2];
+            onEvent(EVENT_MOUSE_DOWN, v, onPointerDownTag);
+            onEvent(EVENT_TOUCH_START, v, onPointerDownTag);
+            setReference(v, $);
         });
-        !isFunction($$.reverse) && ($$.reverse = function () {});
-        !isFunction($$.sort) && ($$.sort = function () {});
+        !isFunction($$.reverse) && ($$.reverse = function () {
+            var $ = this,
+                state = $.state,
+                value = $.value,
+                join = state.join;
+            value = value.split(join).reverse();
+            $.value = value.join(join);
+            return $.fire('sort.tags', [value]);
+        });
+        !isFunction($$.sort) && ($$.sort = function (method) {
+            method = (method || function (a, b) {
+                return a.localeCompare(b, undefined, {
+                    numeric: true,
+                    sensitivity: 'base'
+                });
+            }).bind($);
+            var $ = this,
+                state = $.state,
+                value = $.value,
+                join = state.join;
+            value = value.split(join).sort(method);
+            $.value = value.join(join);
+            return $.fire('sort.tags', [value]);
+        });
+        return $.on('set.tag', onSetTag);
     }
 
     function detach() {
-        var $ = this;
-        $._tags;
+        var $ = this,
+            $$ = $.constructor._,
+            _tags = $._tags;
+        forEachMap(_tags, function (v) {
+            v = v[2];
+            letReference(v);
+            offEvent(EVENT_MOUSE_DOWN, v, onPointerDownTag);
+            offEvent(EVENT_TOUCH_START, v, onPointerDownTag);
+        });
+        delete $$.reverse;
+        delete $$.sort;
+        return $.off('set.tag', onSetTag);
     }
     var clone,
+        left,
         rect,
-        startLeft,
-        startTop,
+        top,
         x = 0,
         y = 0;
 
     function isBefore(a, b) {
         var c;
-        for (c = a.previousSibling; c; c = c.previousSibling) {
+        for (c = getPrev(a, 1); c; c = getPrev(c, 1)) {
             if (c === b) {
                 return 1;
             }
@@ -298,27 +425,36 @@
     }
 
     function onPointerDownTag(e) {
-        onEvent('mousemove', D, onPointerMoveDocument);
-        onEvent('mouseup', D, onPointerUpDocument);
-        var $ = this;
-        if ('touchstart' === e.type) {
-            startLeft = e.touches[0].clientX - x;
-            startTop = e.touches[0].clientY - y;
-        } else {
-            startLeft = e.clientX - x;
-            startTop = e.clientY - y;
+        var $ = this,
+            picker = getReference($),
+            state = picker.state,
+            n = state.n,
+            _e = e,
+            target = _e.target,
+            type = _e.type;
+        if (hasClass(target, n + '__x') || getParent(target, '.' + n + '__x')) {
+            return;
         }
+        onEvent(EVENT_MOUSE_MOVE, D, onPointerMoveDocument);
+        onEvent(EVENT_MOUSE_UP, D, onPointerUpDocument);
+        onEvent(EVENT_TOUCH_END, D, onPointerUpDocument);
+        onEvent(EVENT_TOUCH_MOVE, D, onPointerMoveDocument);
+        if (EVENT_TOUCH_START === type) {
+            e = e.touches[0];
+        }
+        left = e.clientX - x;
+        top = e.clientY - y;
         letID(clone = $.cloneNode(true));
-        clone._ref = $;
-        rect = $.getBoundingClientRect();
+        rect = getRect($);
+        setReference(clone, $);
         setStyle($, 'visibility', 'hidden');
         setStyles(clone, {
-            'height': rect.height + 'px',
-            'left': rect.left + 'px',
+            'height': rect[3] + 'px',
+            'left': rect[0] + 'px',
             'pointer-events': 'none',
             'position': 'absolute',
-            'top': rect.top + 'px',
-            'width': rect.width + 'px',
+            'top': rect[1] + 'px',
+            'width': rect[2] + 'px',
             'z-index': 9999
         });
         setChildLast(B, clone);
@@ -337,47 +473,84 @@
             return;
         }
         offEventDefault(e);
-        if (e.type === 'touchmove') {
-            x = e.touches[0].clientX - startLeft;
-            y = e.touches[0].clientY - startTop;
-        } else {
-            x = e.clientX - startLeft;
-            y = e.clientY - startTop;
-            var targetElement = D.elementFromPoint(e.clientX, e.clientY),
-                parent;
-            if (hasClass(targetElement, 'tag-picker__tag'));
-            else if (parent = getParent(targetElement, '.tag-picker__tag')) {
-                targetElement = parent;
-            } else {
-                targetElement = 0;
-            }
-            if (targetElement && targetElement !== clone._ref) {
-                targetElement.parentNode.insertBefore(clone._ref, isBefore(clone._ref, targetElement) ? targetElement : targetElement.nextSibling);
-            }
+        var cloneOf = getReference(clone),
+            picker = getReference(cloneOf),
+            _mask = picker._mask,
+            state = picker.state,
+            flex = _mask.flex,
+            n = state.n,
+            current,
+            parent;
+        if (EVENT_TOUCH_MOVE === e.type) {
+            e = e.touches[0];
         }
-        setTranslate(x, y, clone);
+        x = e.clientX - left;
+        y = e.clientY - top;
+        current = D.elementFromPoint(e.clientX, e.clientY);
+        if (hasClass(current, n + '__tag'));
+        else if (parent = getParent(current, '.' + n + '__tag')) {
+            current = parent;
+        } else {
+            current = 0;
+        }
+        translate(x, y, clone);
+        if (current && current !== cloneOf && flex === getParent(current)) {
+            isBefore(cloneOf, current) ? setPrev(current, cloneOf) : setNext(current, cloneOf);
+        }
     }
 
     function onPointerUpDocument(e) {
-        offEvent('mousemove', D, onPointerMoveDocument);
-        offEvent('mouseup', D, onPointerUpDocument);
+        offEvent(EVENT_MOUSE_MOVE, D, onPointerMoveDocument);
+        offEvent(EVENT_MOUSE_UP, D, onPointerUpDocument);
+        offEvent(EVENT_TOUCH_END, D, onPointerUpDocument);
+        offEvent(EVENT_TOUCH_MOVE, D, onPointerMoveDocument);
         if (clone) {
-            letElement(clone);
-            letStyle(clone._ref, 'visibility');
-            var current = clone._ref,
-                parent;
+            var current, parent, picker, value;
+            letStyle(current = getReference(clone), 'visibility');
+            picker = getReference(current);
+            value = current.value;
             while (parent = getParent(current)) {
                 letStyle(current = parent, 'cursor');
                 if (B === current) {
                     break;
                 }
             }
+            letReference(clone), letElement(clone);
+            if (picker) {
+                var map = new Map(),
+                    _picker = picker,
+                    _mask = _picker._mask,
+                    _tags = _picker._tags,
+                    self = _picker.self,
+                    state = _picker.state,
+                    flex = _mask.flex,
+                    join = state.join,
+                    key,
+                    values = [];
+                forEachArray(getElements('data[value]', flex), function (v) {
+                    setValueInMap(key = v.value, _tags.at(key), map);
+                    values.push(key);
+                });
+                setValue(self, values.join(join));
+                _tags.values = map;
+                picker.fire('sort.tag', [value]);
+            }
         }
         clone = x = y = 0;
     }
 
-    function setTranslate(xPos, yPos, el) {
-        el.style.transform = "translate3d(" + xPos + "px, " + yPos + "px, 0)";
+    function onSetTag(name) {
+        var $ = this,
+            at = $.tags.at(name);
+        if (at = at && at[2]) {
+            onEvent(EVENT_MOUSE_DOWN, at, onPointerDownTag);
+            onEvent(EVENT_TOUCH_START, at, onPointerDownTag);
+            setReference(at, $);
+        }
+    }
+
+    function translate(x, y, node) {
+        setStyle(node, 'transform', 'translate3d(' + x + 'px,' + y + 'px,0)');
     }
     var index_js = {
         attach: attach,
