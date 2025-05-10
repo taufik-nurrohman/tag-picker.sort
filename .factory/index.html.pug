@@ -1,8 +1,8 @@
 extends _index.pug
 
 block state
-  - const scripts = ['https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js', '../tag-picker/index.min.js', 'index.min.js']
-  - const styles = ['../layout/index.min.css', '../tag-picker/index.min.css']
+  - const scripts = ['../tag-picker/index.min.js', 'index.min.js']
+  - const styles = ['../layout/index.min.css', '../layout/anchor/index.min.css', '../tag-picker/index.min.css']
   - const theme = '#000'
   - const title = 'Tag Picker Sort ' + version
 
@@ -11,12 +11,12 @@ block script
     | const picker = new TagPicker(document.forms[0].tags, {
     |     with: [TagPicker.Sort]
     | });
-    | picker.on('sort.tag', function (e, tag) {
-    |     console.log(tag);
+    | picker.on('sort.tag', function (name) {
+    |     console.log(name);
     |     console.log(this.value);
     | });
-    | picker.on('sort.tags', function (e, tags) {
-    |     console.log(tags);
+    | picker.on('sort.tags', function (names) {
+    |     console.log(names);
     |     console.log(this.value);
     | });
 
@@ -30,9 +30,6 @@ block style
     | .tag-picker {
     |   flex: 1;
     | }
-    | .tag-picker__tag--ghost {
-    |   visibility: hidden;
-    | }
 
 block content
   header
@@ -40,7 +37,7 @@ block content
       h1
         a(href='../tag-picker/index.html#extensions') &laquo;
         = ' ' + title
-      p This extension lets you sort the tag items both programmatically and manually by dragging them into the desired order. You need to load the #[a(href='https://sortablejs.github.io/Sortable' target='_blank') #[code Sortable]] library for this to work.
+      p This extension lets you sort the tag items both programmatically and manually by dragging them into the desired order.
   main
     form(method='get' target='_blank')
       p(role='group')
@@ -52,11 +49,12 @@ block content
         = ' '
         button(onclick='return picker.sort(), false;') Sort
     h2#usage
-      a(href='#usage') #
+      a(aria-hidden='true' href='#usage') #
       = ' Usage'
-    h4 Browser
+    h3#browser
+      a(aria-hidden='true' href='#browser') #
+      = ' Browser'
     pre: code
-      | &lt;script src="#[a(href='https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js' target='_blank') ./sortable.min.js]"&gt;&lt;/script&gt;
       | &lt;script src="#[a(href='../tag-picker/index.min.js' target='_blank') ./tag-picker/index.min.js]"&gt;&lt;/script&gt;
       | &lt;script src="#[a(href='index.min.js' target='_blank') ./tag-picker.sort/index.min.js]"&gt;&lt;/script&gt;
       | &lt;script&gt;
@@ -64,39 +62,46 @@ block content
       |       with: [TagPicker.Sort]
       |   });
       | &lt;/script&gt;
-    h4 CommonJS
+    h3#node
+      a(aria-hidden='true' href='#node') #
+      = ' Node.js'
+    h4#cjs
+      a(aria-hidden='true' href='#cjs') #
+      = ' CommonJS'
     pre: code
       | const TagPicker = require('@taufik-nurrohman/tag-picker').default;
       | const TagPickerSort = require('@taufik-nurrohman/tag-picker.sort').default;
       |
-      | if ('undefined' === typeof Sortable) {
-      |     throw new ReferenceError('Missing `Sortable` library.');
-      | }
-      |
       | const picker = new TagPicker(document.querySelector('input'), {
       |     with: [TagPickerSort]
       | });
-    h4 ECMAScript
+    h4#mjs
+      a(aria-hidden='true' href='#mjs') #
+      = ' ECMAScript'
     pre: code
       | import TagPicker from '@taufik-nurrohman/tag-picker';
       | import TagPickerSort from '@taufik-nurrohman/tag-picker.sort';
-      |
-      | import Sortable from '#[a(href='https://www.npmjs.com/package/sortablejs' target='_blank') sortablejs]';
-      |
-      | window.Sortable = Sortable; // Expose `Sortable` class to `window` (optional)
       |
       | const picker = new TagPicker(document.querySelector('input'), {
       |     with: [TagPickerSort]
       | });
     h2#methods
-      a(href='#methods') #
+      a(aria-hidden='true' href='#methods') #
       = ' Methods'
-    h3 Instance Methods
-    h4: code picker.reverse()
+    h3#instance-methods
+      a(aria-hidden='true' href='#instance-methods') #
+      = ' Instance Methods'
+    h4#instance-method-reverse
+      a(aria-hidden='true' href='#instance-method-reverse') #
+      = ' '
+      code picker.reverse()
     p Reverses the order of the current tag items.
     pre: code
       | picker.reverse();
-    h4: code picker.sort(method)
+    h4#instance-method-sort
+      a(aria-hidden='true' href='#instance-method-sort') #
+      = ' '
+      code picker.sort(method)
     p Sorts the current tag items in alphabetical order (by default).
     pre: code
       | picker.sort();

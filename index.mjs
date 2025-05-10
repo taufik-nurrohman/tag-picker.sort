@@ -1,153 +1,125 @@
-import {W, getChildren, getDatum, getElements, getNext, getParent, letStyle, setChildLast, setClass, setStyle} from '@taufik-nurrohman/document';
+import {B, D, getNext, getParent, getPrev, getStyle, hasClass, letElement, letID, letStyle, setChildLast, setNext, setPrev, setStyle, setStyles} from '@taufik-nurrohman/document';
+import {forEachMap, getReference, letReference, setReference} from '@taufik-nurrohman/f';
 import {isFunction} from '@taufik-nurrohman/is';
+import {offEvent, offEventDefault, onEvent} from '@taufik-nurrohman/event';
 import {toCount} from '@taufik-nurrohman/to';
 
 const name = 'TagPicker.Sort';
-const references = new WeakMap;
 
-function createSortable($, onEnd, onMove, onSort, onStart) {
-    let {_mask, state} = $,
-        {n} = state,
-        {tags} = _mask;
-    let n_tag_ = n += '__tag--';
-    return new Sortable(tags, {
-        animation: 150,
-        chosenClass: n_tag_ + 'select',
-        dataIdAttr: 'data-value',
-        dragClass: n_tag_ + 'move',
-        filter: '.' + n + '__text',
-        forceFallback: true,
-        ghostClass: n_tag_ + 'ghost',
-        onEnd,
-        onMove,
-        onSort,
-        onStart,
-        selectedClass: n_tag_ + 'selected'
+function attach(self, state) {
+    let $ = this,
+        $$ = $.constructor._,
+        {_mask, _tags} = $;
+    forEachMap(_tags, v => {
+        onEvent('mousedown', v[2], onPointerDownTag);
     });
-}
-
-function getReference(key) {
-    return references.get(key);
-}
-
-function letReference(key) {
-    return references.delete(key);
-}
-
-function onEnd(e) {
-    let $ = this,
-        sortable = getReference($),
-        picker = sortable._picker,
-        {from, to} = e;
-    picker._event = e;
-    from && letStyle(from, 'cursor');
-    to && letStyle(to, 'cursor');
-}
-
-function onLetTag() {
-    let $ = this,
-        sortable = getReference($);
-    sortable && sortable.destroy();
-    sortable = createSortable($, onEnd, onMove, onSort, onStart);
-    sortable._picker = $;
-    setReference($, sortable);
-}
-
-function onMove(e) {
-    let t = this,
-        picker = t._picker,
-        {_active, _mask} = picker,
-        {text} = _mask;
-    if (!_active) {
-        return;
-    }
-    picker._event = e;
-    return e.related !== text;
-}
-
-function onSort(e) {
-    let t = this, v,
-        picker = t._picker,
-        {_active, _mask, self, state} = picker,
-        {tags} = _mask,
-        {item} = e;
-    if (!_active) {
-        return;
-    }
-    picker._event = e;
-    let _tags = t.toArray().slice(0, -1); // All but the last item (the `.tag-picker__text` item)
-    self.value = _tags.join(state.join);
-    picker.fire('sort.tag', [e, v = getDatum(item, 'value', false)]).fire('change', [e, v]);
-    picker.value = picker.value; // Refresh!
-    letStyle(tags, 'cursor');
-}
-
-function onStart(e) {
-    let t = this,
-        picker = t._picker,
-        {_active} = picker,
-        {from, to} = e;
-    if (!_active) {
-        return;
-    }
-    picker._event = e;
-    from && setStyle(from, 'cursor', 'move');
-    to && setStyle(to, 'cursor', 'move');
-}
-
-function setReference(key, value) {
-    return references.set(key, value);
-}
-
-function attach() {
-    const $ = this;
-    const $$ = $.constructor._;
     !isFunction($$.reverse) && ($$.reverse = function () {
-        let $ = this,
-            sortable = getReference($),
-            {_active, _event, self, state} = $,
-            {join} = state;
-        if (!_active) {
-            return $;
-        }
-        let tags = sortable.toArray(),
-            text = tags.pop();
-        tags = tags.reverse();
-        self.value = tags.join(join);
-        return sortable.sort(tags.concat(text), true), $.fire('sort.tags', [_event, tags]);
+
     });
-    !isFunction($$.sort) && ($$.sort = function (method) {
-        let $ = this,
-            sortable = getReference($),
-            {_active, _event, self, state} = $,
-            {join} = state;
-        if (!_active) {
-            return $;
-        }
-        method = (method || function (a, b) {
-            return a.localeCompare(b, undefined, {
-                numeric: true,
-                sensitivity: 'base'
-            });
-        }).bind($);
-        let tags = sortable.toArray(),
-            text = tags.pop();
-        tags = tags.sort(method);
-        self.value = tags.join(join);
-        return sortable.sort(tags.concat(text), true), $.fire('sort.tags', [_event, tags]);
+    !isFunction($$.sort) && ($$.sort = function () {
+
     });
-    let sortable = createSortable($, onEnd, onMove, onSort, onStart);
-    sortable._picker = $;
-    setReference($, sortable);
-    return $.on('let.tag', onLetTag);
 }
 
 function detach() {
     let $ = this,
-        sortable = getReference($);
-    sortable && sortable.destroy();
-    letReference($);
-    return $.off('let.tag', onLetTag);
+        {_tags} = $;
+}
+
+let clone,
+    rect,
+    startLeft,
+    startTop,
+    x = 0,
+    y = 0;
+
+function isBefore(a, b) {
+    let c;
+    for (c = a.previousSibling; c; c = c.previousSibling) {
+        if (c === b) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+function onPointerDownTag(e) {
+    onEvent('mousemove', D, onPointerMoveDocument);
+    onEvent('mouseup', D, onPointerUpDocument);
+    let $ = this;
+    if ('touchstart' === e.type) {
+        startLeft = e.touches[0].clientX - x;
+        startTop = e.touches[0].clientY - y;
+    } else {
+        startLeft = e.clientX - x;
+        startTop = e.clientY - y;
+    }
+    letID(clone = $.cloneNode(true));
+    clone._ref = $;
+    rect = $.getBoundingClientRect();
+    setStyle($, 'visibility', 'hidden');
+    setStyles(clone, {
+        'height': rect.height + 'px',
+        'left': rect.left + 'px',
+        'pointer-events': 'none',
+        'position': 'absolute',
+        'top': rect.top + 'px',
+        'width': rect.width + 'px',
+        'z-index': 9999,
+    });
+    setChildLast(B, clone);
+    let current = $, parent;
+    while (parent = getParent(current)) {
+        setStyle(current = parent, 'cursor', 'move');
+        if (B === current) {
+            break;
+        }
+    }
+}
+
+function onPointerMoveDocument(e) {
+    if (!clone) {
+        return;
+    }
+    offEventDefault(e);
+    if (e.type === 'touchmove') {
+        x = e.touches[0].clientX - startLeft;
+        y = e.touches[0].clientY - startTop;
+    } else {
+        x = e.clientX - startLeft;
+        y = e.clientY - startTop;
+        let targetElement = D.elementFromPoint(e.clientX, e.clientY), parent;
+        if (hasClass(targetElement, 'tag-picker__tag')) {} else if (parent = getParent(targetElement, '.tag-picker__tag')) {
+            targetElement = parent;
+        } else {
+            targetElement = 0;
+        }
+        if (targetElement && targetElement !== clone._ref) {
+            targetElement.parentNode.insertBefore(clone._ref, isBefore(clone._ref, targetElement) ? targetElement : targetElement.nextSibling);
+        }
+    }
+    setTranslate(x, y, clone);
+}
+
+function onPointerUpDocument(e) {
+    offEvent('mousemove', D, onPointerMoveDocument);
+    offEvent('mouseup', D, onPointerUpDocument);
+    if (clone) {
+        letElement(clone);
+        letStyle(clone._ref, 'visibility');
+        let current = clone._ref, parent;
+        while (parent = getParent(current)) {
+            letStyle(current = parent, 'cursor');
+            if (B === current) {
+                break;
+            }
+        }
+    }
+    clone = x = y = 0;
+}
+
+function setTranslate(xPos, yPos, el) {
+    el.style.transform = "translate3d(" + xPos + "px, " + yPos + "px, 0)";
 }
 
 export default {attach, detach, name};
