@@ -1,153 +1,203 @@
-import {W, getChildren, getDatum, getElements, getNext, getParent, letStyle, setChildLast, setClass, setStyle} from '@taufik-nurrohman/document';
+import {B, D, getElements, getNext, getParent, getPrev, getStyle, hasClass, letElement, letID, letStyle, setChildLast, setNext, setPrev, setStyle, setStyles, setValue} from '@taufik-nurrohman/document';
+import {forEachArray, forEachMap, getReference, getValueInMap, letReference, setReference, setValueInMap} from '@taufik-nurrohman/f';
+import {getRect} from '@taufik-nurrohman/rect';
 import {isFunction} from '@taufik-nurrohman/is';
+import {offEvent, offEventDefault, onEvent} from '@taufik-nurrohman/event';
 import {toCount} from '@taufik-nurrohman/to';
 
 const name = 'TagPicker.Sort';
-const references = new WeakMap;
 
-function createSortable($, onEnd, onMove, onSort, onStart) {
-    let {_mask, state} = $,
-        {n} = state,
-        {tags} = _mask;
-    let n_tag_ = n += '__tag--';
-    return new Sortable(tags, {
-        animation: 150,
-        chosenClass: n_tag_ + 'select',
-        dataIdAttr: 'data-value',
-        dragClass: n_tag_ + 'move',
-        filter: '.' + n + '__text',
-        forceFallback: true,
-        ghostClass: n_tag_ + 'ghost',
-        onEnd,
-        onMove,
-        onSort,
-        onStart,
-        selectedClass: n_tag_ + 'selected'
+const EVENT_DOWN = 'down';
+const EVENT_MOVE = 'move';
+const EVENT_UP = 'up';
+
+const EVENT_MOUSE = 'mouse';
+const EVENT_MOUSE_DOWN = EVENT_MOUSE + EVENT_DOWN;
+const EVENT_MOUSE_MOVE = EVENT_MOUSE + EVENT_MOVE;
+const EVENT_MOUSE_UP = EVENT_MOUSE + EVENT_UP;
+const EVENT_TOUCH = 'touch';
+const EVENT_TOUCH_END = EVENT_TOUCH + 'end';
+const EVENT_TOUCH_MOVE = EVENT_TOUCH + EVENT_MOVE;
+const EVENT_TOUCH_START = EVENT_TOUCH + 'start';
+
+function attach(self, state) {
+    let $ = this,
+        $$ = $.constructor._,
+        {_mask, _tags} = $;
+    forEachMap(_tags, v => {
+        v = v[2];
+        onEvent(EVENT_MOUSE_DOWN, v, onPointerDownTag);
+        onEvent(EVENT_TOUCH_START, v, onPointerDownTag);
+        setReference(v, $);
     });
-}
-
-function getReference(key) {
-    return references.get(key);
-}
-
-function letReference(key) {
-    return references.delete(key);
-}
-
-function onEnd(e) {
-    let $ = this,
-        sortable = getReference($),
-        picker = sortable._picker,
-        {from, to} = e;
-    picker._event = e;
-    from && letStyle(from, 'cursor');
-    to && letStyle(to, 'cursor');
-}
-
-function onLetTag() {
-    let $ = this,
-        sortable = getReference($);
-    sortable && sortable.destroy();
-    sortable = createSortable($, onEnd, onMove, onSort, onStart);
-    sortable._picker = $;
-    setReference($, sortable);
-}
-
-function onMove(e) {
-    let t = this,
-        picker = t._picker,
-        {_active, _mask} = picker,
-        {text} = _mask;
-    if (!_active) {
-        return;
-    }
-    picker._event = e;
-    return e.related !== text;
-}
-
-function onSort(e) {
-    let t = this, v,
-        picker = t._picker,
-        {_active, _mask, self, state} = picker,
-        {tags} = _mask,
-        {item} = e;
-    if (!_active) {
-        return;
-    }
-    picker._event = e;
-    let _tags = t.toArray().slice(0, -1); // All but the last item (the `.tag-picker__text` item)
-    self.value = _tags.join(state.join);
-    picker.fire('sort.tag', [e, v = getDatum(item, 'value', false)]).fire('change', [e, v]);
-    picker.value = picker.value; // Refresh!
-    letStyle(tags, 'cursor');
-}
-
-function onStart(e) {
-    let t = this,
-        picker = t._picker,
-        {_active} = picker,
-        {from, to} = e;
-    if (!_active) {
-        return;
-    }
-    picker._event = e;
-    from && setStyle(from, 'cursor', 'move');
-    to && setStyle(to, 'cursor', 'move');
-}
-
-function setReference(key, value) {
-    return references.set(key, value);
-}
-
-function attach() {
-    const $ = this;
-    const $$ = $.constructor._;
     !isFunction($$.reverse) && ($$.reverse = function () {
         let $ = this,
-            sortable = getReference($),
-            {_active, _event, self, state} = $,
+            {state, value} = $,
             {join} = state;
-        if (!_active) {
-            return $;
-        }
-        let tags = sortable.toArray(),
-            text = tags.pop();
-        tags = tags.reverse();
-        self.value = tags.join(join);
-        return sortable.sort(tags.concat(text), true), $.fire('sort.tags', [_event, tags]);
+        value = value.split(join).reverse();
+        $.value = value.join(join);
+        return $.fire('sort.tags', [value]);
     });
     !isFunction($$.sort) && ($$.sort = function (method) {
-        let $ = this,
-            sortable = getReference($),
-            {_active, _event, self, state} = $,
-            {join} = state;
-        if (!_active) {
-            return $;
-        }
         method = (method || function (a, b) {
             return a.localeCompare(b, undefined, {
                 numeric: true,
                 sensitivity: 'base'
             });
         }).bind($);
-        let tags = sortable.toArray(),
-            text = tags.pop();
-        tags = tags.sort(method);
-        self.value = tags.join(join);
-        return sortable.sort(tags.concat(text), true), $.fire('sort.tags', [_event, tags]);
+        let $ = this,
+            {state, value} = $,
+            {join} = state;
+        value = value.split(join).sort(method);
+        $.value = value.join(join);
+        return $.fire('sort.tags', [value]);
     });
-    let sortable = createSortable($, onEnd, onMove, onSort, onStart);
-    sortable._picker = $;
-    setReference($, sortable);
-    return $.on('let.tag', onLetTag);
+    return $.on('set.tag', onSetTag);
 }
 
 function detach() {
     let $ = this,
-        sortable = getReference($);
-    sortable && sortable.destroy();
-    letReference($);
-    return $.off('let.tag', onLetTag);
+        $$ = $.constructor._,
+        {_tags} = $;
+    forEachMap(_tags, v => {
+        v = v[2];
+        letReference(v, $);
+        offEvent(EVENT_MOUSE_DOWN, v, onPointerDownTag);
+        offEvent(EVENT_TOUCH_START, v, onPointerDownTag);
+    });
+    delete $$.reverse;
+    delete $$.sort;
+    return $.off('set.tag', onSetTag);
+}
+
+let clone, left, rect, top,
+    x = 0,
+    y = 0;
+
+function isBefore(a, b) {
+    let c;
+    for (c = getPrev(a, 1); c; c = getPrev(c, 1)) {
+        if (c === b) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+function onPointerDownTag(e) {
+    let $ = this,
+        picker = getReference($),
+        {state} = picker,
+        {n} = state,
+        {target, type} = e;
+    if (hasClass(target, n + '__x') || getParent(target, '.' + n + '__x')) {
+        return;
+    }
+    onEvent(EVENT_MOUSE_MOVE, D, onPointerMoveDocument);
+    onEvent(EVENT_MOUSE_UP, D, onPointerUpDocument);
+    onEvent(EVENT_TOUCH_END, D, onPointerUpDocument);
+    onEvent(EVENT_TOUCH_MOVE, D, onPointerMoveDocument);
+    if (EVENT_TOUCH_START === type) {
+        e = e.touches[0];
+    }
+    left = e.clientX - x;
+    top = e.clientY - y;
+    letID(clone = $.cloneNode(true));
+    rect = getRect($);
+    setReference(clone, $);
+    setStyle($, 'visibility', 'hidden');
+    setStyles(clone, {
+        'height': rect[3] + 'px',
+        'left': rect[0] + 'px',
+        'pointer-events': 'none',
+        'position': 'absolute',
+        'top': rect[1] + 'px',
+        'width': rect[2] + 'px',
+        'z-index': 9999
+    });
+    setChildLast(B, clone);
+    let current = $, parent;
+    while (parent = getParent(current)) {
+        setStyle(current = parent, 'cursor', 'move');
+        if (B === current) {
+            break;
+        }
+    }
+}
+
+function onPointerMoveDocument(e) {
+    if (!clone) {
+        return;
+    }
+    offEventDefault(e);
+    let cloneOf = getReference(clone),
+        picker = getReference(cloneOf),
+        {_mask, state} = picker,
+        {flex} = _mask,
+        {n} = state, current, parent;
+    if (EVENT_TOUCH_MOVE === e.type) {
+        e = e.touches[0];
+    }
+    x = e.clientX - left;
+    y = e.clientY - top;
+    current = D.elementFromPoint(e.clientX, e.clientY);
+    if (hasClass(current, n + '__tag')) {} else if (parent = getParent(current, '.' + n + '__tag')) {
+        current = parent;
+    } else {
+        current = 0;
+    }
+    translate(x, y, clone);
+    if (current && current !== cloneOf && flex === getParent(current)) {
+        isBefore(cloneOf, current) ? setPrev(current, cloneOf) : setNext(current, cloneOf);
+    }
+}
+
+function onPointerUpDocument(e) {
+    offEvent(EVENT_MOUSE_MOVE, D, onPointerMoveDocument);
+    offEvent(EVENT_MOUSE_UP, D, onPointerUpDocument);
+    offEvent(EVENT_TOUCH_END, D, onPointerUpDocument);
+    offEvent(EVENT_TOUCH_MOVE, D, onPointerMoveDocument);
+    if (clone) {
+        let current, parent, picker, value;
+        letStyle(current = getReference(clone), 'visibility');
+        picker = getReference(current);
+        value = current.value;
+        while (parent = getParent(current)) {
+            letStyle(current = parent, 'cursor');
+            if (B === current) {
+                break;
+            }
+        }
+        letReference(clone), letElement(clone);
+        if (picker) {
+            let map = new Map,
+                {_mask, _tags, self, state} = picker,
+                {flex} = _mask,
+                {join} = state, key, values = [];
+            forEachArray(getElements('data[value]', flex), v => {
+                setValueInMap(key = v.value, _tags.at(key), map);
+                values.push(key);
+            });
+            setValue(self, values.join(join));
+            _tags.values = map;
+            picker.fire('sort.tag', [value]);
+        }
+    }
+    clone = x = y = 0;
+}
+
+function onSetTag(name) {
+    let $ = this,
+        at = $.tags.at(name);
+    if (at = at && at[2]) {
+        onEvent(EVENT_MOUSE_DOWN, at, onPointerDownTag);
+        onEvent(EVENT_TOUCH_START, at, onPointerDownTag);
+        setReference(at, $);
+    }
+}
+
+function translate(x, y, node) {
+    setStyle(node, 'transform', 'translate3d(' + x + 'px,' + y + 'px,0)');
 }
 
 export default {attach, detach, name};

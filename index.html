@@ -5,8 +5,9 @@
     <meta content="#000" name="theme-color">
     <meta content="width=device-width" name="viewport">
     <meta content="Lets you sort the tag items both programmatically and manually by dragging them into the desired order." name="description">
-    <title>Tag Picker Sort 1.0.0</title>
+    <title>Tag Picker Sort 1.0.1</title>
     <link href="../layout/index.min.css" rel="stylesheet">
+    <link href="../layout/anchor/index.min.css" rel="stylesheet">
     <link href="../tag-picker/index.min.css" rel="stylesheet">
     <style>
       body {
@@ -17,16 +18,13 @@
       .tag-picker {
         flex: 1;
       }
-      .tag-picker__tag--ghost {
-        visibility: hidden;
-      }
     </style>
   </head>
   <body>
     <header>
       <hgroup>
-        <h1><a href="../tag-picker/index.html#extensions">&laquo;</a> Tag Picker Sort 1.0.0</h1>
-        <p>This extension lets you sort the tag items both programmatically and manually by dragging them into the desired order. You need to load the <a href="https://sortablejs.github.io/Sortable" target="_blank"><code>Sortable</code></a> library for this to work.</p>
+        <h1><a href="../tag-picker/index.html#extensions">&laquo;</a> Tag Picker Sort 1.0.1</h1>
+        <p>This extension lets you sort the tag items both programmatically and manually by dragging them into the desired order.</p>
       </hgroup>
     </header>
     <main>
@@ -34,44 +32,36 @@
         <p role="group"><input name="tags" placeholder="Tags go here&hellip;" type="text" value="foo, bar, baz, qux"> <button type="submit">Submit</button></p>
         <p role="group"><button onclick="return picker.reverse(), false;">Reverse</button> <button onclick="return picker.sort(), false;">Sort</button></p>
       </form>
-      <h2 id="usage"><a href="#usage">#</a> Usage</h2>
-      <h4>Browser</h4>
-      <pre><code>&lt;script src="<a href="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js" target="_blank">./sortable.min.js</a>"&gt;&lt;/script&gt;
-&lt;script src="<a href="../tag-picker/index.min.js" target="_blank">./tag-picker/index.min.js</a>"&gt;&lt;/script&gt;
+      <h2 id="usage"><a aria-hidden="true" href="#usage">#</a> Usage</h2>
+      <h3 id="browser"><a aria-hidden="true" href="#browser">#</a> Browser</h3>
+      <pre><code>&lt;script src="<a href="../tag-picker/index.min.js" target="_blank">./tag-picker/index.min.js</a>"&gt;&lt;/script&gt;
 &lt;script src="<a href="index.min.js" target="_blank">./tag-picker.sort/index.min.js</a>"&gt;&lt;/script&gt;
 &lt;script&gt;
   const picker = new TagPicker(document.querySelector('input'), {
       with: [TagPicker.Sort]
   });
 &lt;/script&gt;</code></pre>
-      <h4>CommonJS</h4>
+      <h3 id="node"><a aria-hidden="true" href="#node">#</a> Node.js</h3>
+      <h4 id="cjs"><a aria-hidden="true" href="#cjs">#</a> CommonJS</h4>
       <pre><code>const TagPicker = require('@taufik-nurrohman/tag-picker').default;
 const TagPickerSort = require('@taufik-nurrohman/tag-picker.sort').default;
 
-if ('undefined' === typeof Sortable) {
-    throw new ReferenceError('Missing `Sortable` library.');
-}
-
 const picker = new TagPicker(document.querySelector('input'), {
     with: [TagPickerSort]
 });</code></pre>
-      <h4>ECMAScript</h4>
+      <h4 id="mjs"><a aria-hidden="true" href="#mjs">#</a> ECMAScript</h4>
       <pre><code>import TagPicker from '@taufik-nurrohman/tag-picker';
 import TagPickerSort from '@taufik-nurrohman/tag-picker.sort';
 
-import Sortable from '<a href="https://www.npmjs.com/package/sortablejs" target="_blank">sortablejs</a>';
-
-window.Sortable = Sortable; // Expose `Sortable` class to `window` (optional)
-
 const picker = new TagPicker(document.querySelector('input'), {
     with: [TagPickerSort]
 });</code></pre>
-      <h2 id="methods"><a href="#methods">#</a> Methods</h2>
-      <h3>Instance Methods</h3>
-      <h4><code>picker.reverse()</code></h4>
+      <h2 id="methods"><a aria-hidden="true" href="#methods">#</a> Methods</h2>
+      <h3 id="instance-methods"><a aria-hidden="true" href="#instance-methods">#</a> Instance Methods</h3>
+      <h4 id="instance-method-reverse"><a aria-hidden="true" href="#instance-method-reverse">#</a> <code>picker.reverse()</code></h4>
       <p>Reverses the order of the current tag items.</p>
       <pre><code>picker.reverse();</code></pre>
-      <h4><code>picker.sort(method)</code></h4>
+      <h4 id="instance-method-sort"><a aria-hidden="true" href="#instance-method-sort">#</a> <code>picker.sort(method)</code></h4>
       <p>Sorts the current tag items in alphabetical order (by default).</p>
       <pre><code>picker.sort();</code></pre>
       <pre><code>picker.sort((a, b) => {
@@ -83,21 +73,20 @@ const picker = new TagPicker(document.querySelector('input'), {
     </main>
     <footer>
       <hr>
-      <p>&copy; 2024 <a href="/">Taufik Nurrohman</a></p>
+      <p>&copy; 2025 <a href="/">Taufik Nurrohman</a></p>
     </footer>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="../tag-picker/index.min.js"></script>
     <script src="index.min.js"></script>
     <script>
       const picker = new TagPicker(document.forms[0].tags, {
           with: [TagPicker.Sort]
       });
-      picker.on('sort.tag', function (e, tag) {
-          console.log(tag);
+      picker.on('sort.tag', function (name) {
+          console.log(name);
           console.log(this.value);
       });
-      picker.on('sort.tags', function (e, tags) {
-          console.log(tags);
+      picker.on('sort.tags', function (names) {
+          console.log(names);
           console.log(this.value);
       });
     </script>
