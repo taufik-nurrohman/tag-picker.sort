@@ -425,6 +425,7 @@
     }
 
     function onPointerDownTag(e) {
+        offEventDefault(e);
         var $ = this,
             picker = getReference($),
             state = picker.state,
@@ -452,7 +453,7 @@
             'height': rect[3] + 'px',
             'left': rect[0] + 'px',
             'pointer-events': 'none',
-            'position': 'absolute',
+            'position': 'fixed',
             'top': rect[1] + 'px',
             'width': rect[2] + 'px',
             'z-index': 9999
