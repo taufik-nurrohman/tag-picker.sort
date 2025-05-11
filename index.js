@@ -328,15 +328,6 @@
         }
         return node.value = _fromValue(value), node;
     };
-    var delay = function delay(then, time) {
-        return function () {
-            var _arguments2 = arguments,
-                _this2 = this;
-            setTimeout(function () {
-                return then.apply(_this2, _arguments2);
-            }, time);
-        };
-    };
     var getRect = function getRect(node) {
         var h, rect, w, x, y, X, Y;
         if (isWindow(node)) {
@@ -367,7 +358,6 @@
         }
         node.addEventListener(name, then, options);
     };
-    var animations = {};
     var name = 'TagPicker.Sort';
     var EVENT_DOWN = 'down';
     var EVENT_MOVE = 'move';
@@ -394,16 +384,14 @@
         });
         !isFunction($$.reverse) && ($$.reverse = function () {
             var $ = this,
-                _mask = $._mask,
-                _tags = $._tags,
-                state = $.state,
-                value = $.value,
-                flex = _mask.flex,
-                join = state.join;
-            sortAnimationStart(_tags, flex);
+                _mask = $._mask;
+            $._tags;
+            var state = $.state,
+                value = $.value;
+            _mask.flex;
+            var join = state.join;
             value = value.split(join).reverse();
             $.value = value.join(join);
-            sortAnimationEnd(_tags, 150);
             return $.fire('sort.tags', [value]);
         });
         !isFunction($$.sort) && ($$.sort = function (method) {
@@ -414,19 +402,17 @@
                 });
             }).bind($);
             var $ = this,
-                _mask = $._mask,
-                _tags = $._tags,
-                state = $.state,
-                value = $.value,
-                flex = _mask.flex,
-                join = state.join,
+                _mask = $._mask;
+            $._tags;
+            var state = $.state,
+                value = $.value;
+            _mask.flex;
+            var join = state.join,
                 v;
             v = value;
             value = value.split(join).sort(method);
             if (v !== value.join(join)) {
-                sortAnimationStart(_tags, flex);
                 $.value = value.join(join);
-                sortAnimationEnd(_tags, 150);
                 return $.fire('sort.tags', [value]);
             }
             return $;
@@ -516,10 +502,10 @@
     }
 
     function onPointerMoveDocument(e) {
+        offEventDefault(e);
         if (!copy) {
             return;
         }
-        offEventDefault(e);
         var copyOf = getReference(copy),
             picker = getReference(copyOf),
             _mask = picker._mask,
@@ -542,21 +528,7 @@
         }
         translate(copy, x, y);
         if (current && current !== copyOf && flex === getParent(current)) {
-            rect = getRect(current);
-            setStyle(current, 'transition', 'transform 150ms');
-            if (isBefore(copyOf, current)) {
-                translate(current, rect[2], 0);
-                delay(function (copyOf, current) {
-                    letStyles(current, ['transform', 'transition']);
-                    setPrev(current, copyOf);
-                }, 150)(copyOf, current);
-            } else {
-                translate(current, -rect[2], 0);
-                delay(function (copyOf, current) {
-                    letStyles(current, ['transform', 'transition']);
-                    setNext(current, copyOf);
-                }, 150)(copyOf, current);
-            }
+            isBefore(copyOf, current) ? setNext(copyOf, current) : setPrev(copyOf, current);
         }
     }
 
@@ -618,38 +590,6 @@
             onEvent(EVENT_TOUCH_START, at, onPointerDownTag);
             setReference(at, $);
         }
-    }
-
-    function sortAnimationEnd(_tags, duration) {
-        forEachMap(_tags, function (v) {
-            var copy = animations[v[2].value],
-                r = getRect(v[2]);
-            delay(function (copy, v) {
-                letElement(copy);
-                letStyle(v[2], 'visibility');
-            }, duration)(copy, v);
-            setStyle(v[2], 'visibility', 'hidden');
-            setStyle(copy, 'transition-duration', duration + 'ms');
-            translate(copy, r[0], r[1]);
-        });
-    }
-
-    function sortAnimationStart(_tags, flex) {
-        forEachMap(_tags, function (v) {
-            var copy = letID(v[2].cloneNode(true)),
-                r = getRect(v[2]);
-            animations[v[2].value] = copy;
-            setStyles(copy, {
-                'height': r[3],
-                'left': 0,
-                'position': 'fixed',
-                'top': 0,
-                'transition': 'transform 0s',
-                'width': r[2],
-                'z-index': 9999
-            }), translate(copy, r[0], r[1]);
-            setChildLast(flex, copy);
-        });
     }
 
     function translate(node, x, y) {

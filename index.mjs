@@ -1,12 +1,10 @@
 import {B, D, getElements, getNext, getParent, getPrev, getStyle, hasClass, letElement, letID, letStyle, letStyles, setChildLast, setNext, setPrev, setStyle, setStyles, setValue} from '@taufik-nurrohman/document';
-import {delay} from '@taufik-nurrohman/tick';
 import {forEachArray, forEachMap, getReference, getValueInMap, letReference, setReference, setValueInMap} from '@taufik-nurrohman/f';
 import {getRect} from '@taufik-nurrohman/rect';
 import {isFunction} from '@taufik-nurrohman/is';
 import {offEvent, offEventDefault, onEvent} from '@taufik-nurrohman/event';
 import {toCount} from '@taufik-nurrohman/to';
 
-const animations = {};
 const name = 'TagPicker.Sort';
 
 const EVENT_DOWN = 'down';
@@ -37,10 +35,8 @@ function attach(self, state) {
             {_mask, _tags, state, value} = $,
             {flex} = _mask,
             {join} = state;
-        sortAnimationStart(_tags, flex);
         value = value.split(join).reverse();
         $.value = value.join(join);
-        sortAnimationEnd(_tags, 150);
         return $.fire('sort.tags', [value]);
     });
     !isFunction($$.sort) && ($$.sort = function (method) {
@@ -57,9 +53,7 @@ function attach(self, state) {
         v = value;
         value = value.split(join).sort(method);
         if (v !== value.join(join)) {
-            sortAnimationStart(_tags, flex);
             $.value = value.join(join);
-            sortAnimationEnd(_tags, 150);
             return $.fire('sort.tags', [value]);
         }
         return $;
@@ -144,10 +138,10 @@ function onPointerDownTag(e) {
 }
 
 function onPointerMoveDocument(e) {
+    offEventDefault(e);
     if (!copy) {
         return;
     }
-    offEventDefault(e);
     let copyOf = getReference(copy),
         picker = getReference(copyOf),
         {_mask, state} = picker,
@@ -166,21 +160,7 @@ function onPointerMoveDocument(e) {
     }
     translate(copy, x, y);
     if (current && current !== copyOf && flex === getParent(current)) {
-        rect = getRect(current);
-        setStyle(current, 'transition', 'transform 150ms');
-        if (isBefore(copyOf, current)) {
-            translate(current, rect[2], 0);
-            delay((copyOf, current) => {
-                letStyles(current, ['transform', 'transition']);
-                setPrev(current, copyOf);
-            }, 150)(copyOf, current);
-        } else {
-            translate(current, -rect[2], 0);
-            delay((copyOf, current) => {
-                letStyles(current, ['transform', 'transition']);
-                setNext(current, copyOf);
-            }, 150)(copyOf, current);
-        }
+        isBefore(copyOf, current) ? setNext(copyOf, current) : setPrev(copyOf, current);
     }
 }
 
@@ -236,38 +216,6 @@ function onSetTag(name) {
         onEvent(EVENT_TOUCH_START, at, onPointerDownTag);
         setReference(at, $);
     }
-}
-
-function sortAnimationEnd(_tags, duration) {
-    forEachMap(_tags, v => {
-        let copy = animations[v[2].value],
-            r = getRect(v[2]);
-        delay((copy, v) => {
-            letElement(copy);
-            letStyle(v[2], 'visibility');
-        }, duration)(copy, v);
-        setStyle(v[2], 'visibility', 'hidden');
-        setStyle(copy, 'transition-duration', duration + 'ms');
-        translate(copy, r[0], r[1]);
-    });
-}
-
-function sortAnimationStart(_tags, flex) {
-    forEachMap(_tags, v => {
-        let copy = letID(v[2].cloneNode(true)),
-            r = getRect(v[2]);
-        animations[v[2].value] = copy;
-        setStyles(copy, {
-            'height': r[3],
-            'left': 0,
-            'position': 'fixed',
-            'top': 0,
-            'transition': 'transform 0s',
-            'width': r[2],
-            'z-index': 9999,
-        }), translate(copy, r[0], r[1]);
-        setChildLast(flex, copy);
-    });
 }
 
 function translate(node, x, y) {
