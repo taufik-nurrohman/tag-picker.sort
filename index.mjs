@@ -35,7 +35,9 @@ function attach(self, state) {
             {state, value} = $,
             {join} = state;
         value = value.split(join).reverse();
+        onSortStart();
         $.value = value.join(join);
+        onSortEnd();
         return $.fire('sort.tags', [value]);
     });
     !isFunction($$.sort) && ($$.sort = function (method) {
@@ -47,10 +49,16 @@ function attach(self, state) {
         }).bind($);
         let $ = this,
             {state, value} = $,
-            {join} = state;
+            {join} = state, v;
+        v = value;
         value = value.split(join).sort(method);
-        $.value = value.join(join);
-        return $.fire('sort.tags', [value]);
+        if (v !== value.join(join)) {
+            onSortStart();
+            $.value = value.join(join);
+            onSortEnd();
+            return $.fire('sort.tags', [value]);
+        }
+        return $;
     });
     return $.on('set.tag', onSetTag);
 }
@@ -113,6 +121,8 @@ function onPointerDownTag(e) {
         'pointer-events': 'none',
         'position': 'fixed',
         'top': rect[1] + 'px',
+        'transform': false,
+        'transition': false,
         'width': rect[2] + 'px',
         'z-index': 9999
     });
@@ -195,6 +205,30 @@ function onSetTag(name) {
         onEvent(EVENT_TOUCH_START, at, onPointerDownTag);
         setReference(at, $);
     }
+}
+
+let oldPos = {};
+
+function onSortStart() {
+    document.querySelectorAll('data[value]').forEach(function (element) {
+        oldPos[element.value] = getRect(element);
+    });
+}
+
+function onSortEnd() {
+    document.querySelectorAll('data[value]').forEach(function (element) {
+        const newBox = getRect(element);
+        const deltaX = oldPos[element.value][0] - newBox[0];
+        const deltaY = oldPos[element.value][1]  - newBox[1];
+        window.requestAnimationFrame( () => {
+            element.style.transform  = `translate(${deltaX}px,${deltaY}px)`;
+            element.style.transition = 'transform 0s';
+            window.requestAnimationFrame( () => {
+                element.style.transform  = '';
+                element.style.transition = 'transform 150ms';
+            });
+        });
+    });
 }
 
 function translate(x, y, node) {
