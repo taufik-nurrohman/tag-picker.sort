@@ -286,6 +286,22 @@
     var letStyle = function letStyle(node, style) {
         return node.style[toCaseCamel(style)] = null, node;
     };
+    var letStyles = function letStyles(node, styles) {
+        if (!styles) {
+            return letAttribute(node, 'style');
+        }
+        if (isArray(styles)) {
+            return forEachArray(styles, function (k) {
+                return letStyle(node, k);
+            }), node;
+        }
+        if (isObject(styles)) {
+            return forEachObject(styles, function (v, k) {
+                return v && letStyle(node, k);
+            }), node;
+        }
+        return node;
+    };
     var setChildLast = function setChildLast(parent, node) {
         return parent.append(node), node;
     };
@@ -311,6 +327,15 @@
             return letAttribute(node, 'value');
         }
         return node.value = _fromValue(value), node;
+    };
+    var delay = function delay(then, time) {
+        return function () {
+            var _arguments2 = arguments,
+                _this2 = this;
+            setTimeout(function () {
+                return then.apply(_this2, _arguments2);
+            }, time);
+        };
     };
     var getRect = function getRect(node) {
         var h, rect, w, x, y, X, Y;
@@ -342,6 +367,7 @@
         }
         node.addEventListener(name, then, options);
     };
+    var animations = {};
     var name = 'TagPicker.Sort';
     var EVENT_DOWN = 'down';
     var EVENT_MOVE = 'move';
@@ -368,13 +394,16 @@
         });
         !isFunction($$.reverse) && ($$.reverse = function () {
             var $ = this,
+                _mask = $._mask,
+                _tags = $._tags,
                 state = $.state,
                 value = $.value,
+                flex = _mask.flex,
                 join = state.join;
+            sortAnimationStart(_tags, flex);
             value = value.split(join).reverse();
-            onSortStart();
             $.value = value.join(join);
-            onSortEnd();
+            sortAnimationEnd(_tags, 150);
             return $.fire('sort.tags', [value]);
         });
         !isFunction($$.sort) && ($$.sort = function (method) {
@@ -385,21 +414,24 @@
                 });
             }).bind($);
             var $ = this,
+                _mask = $._mask,
+                _tags = $._tags,
                 state = $.state,
                 value = $.value,
+                flex = _mask.flex,
                 join = state.join,
                 v;
             v = value;
             value = value.split(join).sort(method);
             if (v !== value.join(join)) {
-                onSortStart();
+                sortAnimationStart(_tags, flex);
                 $.value = value.join(join);
-                onSortEnd();
+                sortAnimationEnd(_tags, 150);
                 return $.fire('sort.tags', [value]);
             }
             return $;
         });
-        return $.on('set.tag', onSetTag);
+        return $.on('let.tag', onLetTag).on('set.tag', onSetTag);
     }
 
     function detach() {
@@ -414,9 +446,9 @@
         });
         delete $$.reverse;
         delete $$.sort;
-        return $.off('set.tag', onSetTag);
+        return $.off('let.tag', onLetTag).off('set.tag', onSetTag);
     }
-    var clone,
+    var copy,
         left,
         rect,
         top,
@@ -454,26 +486,29 @@
         }
         left = e.clientX - x;
         top = e.clientY - y;
-        letID(clone = $.cloneNode(true));
+        letID(copy = $.cloneNode(true));
         rect = getRect($);
-        setReference(clone, $);
+        setReference(copy, $);
         setStyle($, 'visibility', 'hidden');
-        setStyles(clone, {
-            'height': rect[3] + 'px',
-            'left': rect[0] + 'px',
+        setStyles(copy, {
+            'height': rect[3],
+            'left': rect[0],
             'pointer-events': 'none',
             'position': 'fixed',
-            'top': rect[1] + 'px',
+            'top': rect[1],
             'transform': false,
             'transition': false,
-            'width': rect[2] + 'px',
+            'width': rect[2],
             'z-index': 9999
         });
-        setChildLast(B, clone);
+        setChildLast(B, copy);
         var current = $,
             parent;
         while (parent = getParent(current)) {
-            setStyle(current = parent, 'cursor', 'move');
+            setStyles(current = parent, {
+                'cursor': 'move',
+                'overflow': 'hidden'
+            });
             if (B === current) {
                 break;
             }
@@ -481,12 +516,12 @@
     }
 
     function onPointerMoveDocument(e) {
-        if (!clone) {
+        if (!copy) {
             return;
         }
         offEventDefault(e);
-        var cloneOf = getReference(clone),
-            picker = getReference(cloneOf),
+        var copyOf = getReference(copy),
+            picker = getReference(copyOf),
             _mask = picker._mask,
             state = picker.state,
             flex = _mask.flex,
@@ -505,9 +540,23 @@
         } else {
             current = 0;
         }
-        translate(x, y, clone);
-        if (current && current !== cloneOf && flex === getParent(current)) {
-            isBefore(cloneOf, current) ? setPrev(current, cloneOf) : setNext(current, cloneOf);
+        translate(copy, x, y);
+        if (current && current !== copyOf && flex === getParent(current)) {
+            rect = getRect(current);
+            setStyle(current, 'transition', 'transform 150ms');
+            if (isBefore(copyOf, current)) {
+                translate(current, rect[2], 0);
+                delay(function (copyOf, current) {
+                    letStyles(current, ['transform', 'transition']);
+                    setPrev(current, copyOf);
+                }, 150)(copyOf, current);
+            } else {
+                translate(current, -rect[2], 0);
+                delay(function (copyOf, current) {
+                    letStyles(current, ['transform', 'transition']);
+                    setNext(current, copyOf);
+                }, 150)(copyOf, current);
+            }
         }
     }
 
@@ -516,18 +565,18 @@
         offEvent(EVENT_MOUSE_UP, D, onPointerUpDocument);
         offEvent(EVENT_TOUCH_END, D, onPointerUpDocument);
         offEvent(EVENT_TOUCH_MOVE, D, onPointerMoveDocument);
-        if (clone) {
+        if (copy) {
             var current, parent, picker, value;
-            letStyle(current = getReference(clone), 'visibility');
+            letStyle(current = getReference(copy), 'visibility');
             picker = getReference(current);
             value = current.value;
             while (parent = getParent(current)) {
-                letStyle(current = parent, 'cursor');
+                letStyles(current = parent, ['cursor', 'overflow']);
                 if (B === current) {
                     break;
                 }
             }
-            letReference(clone), letElement(clone);
+            letReference(copy), letElement(copy);
             if (picker) {
                 var map = new Map(),
                     _picker = picker,
@@ -548,7 +597,17 @@
                 picker.fire('sort.tag', [value]);
             }
         }
-        clone = x = y = 0;
+        copy = x = y = 0;
+    }
+
+    function onLetTag(name) {
+        var $ = this,
+            at = $.tags.at(name);
+        if (at = at && at[2]) {
+            letReference(at);
+            offEvent(EVENT_MOUSE_DOWN, at, onPointerDownTag);
+            offEvent(EVENT_TOUCH_START, at, onPointerDownTag);
+        }
     }
 
     function onSetTag(name) {
@@ -560,32 +619,41 @@
             setReference(at, $);
         }
     }
-    var oldPos = {};
 
-    function onSortStart() {
-        document.querySelectorAll('data[value]').forEach(function (element) {
-            oldPos[element.value] = getRect(element);
+    function sortAnimationEnd(_tags, duration) {
+        forEachMap(_tags, function (v) {
+            var copy = animations[v[2].value],
+                r = getRect(v[2]);
+            delay(function (copy, v) {
+                letElement(copy);
+                letStyle(v[2], 'visibility');
+            }, duration)(copy, v);
+            setStyle(v[2], 'visibility', 'hidden');
+            setStyle(copy, 'transition-duration', duration + 'ms');
+            translate(copy, r[0], r[1]);
         });
     }
 
-    function onSortEnd() {
-        document.querySelectorAll('data[value]').forEach(function (element) {
-            var newBox = getRect(element);
-            var deltaX = oldPos[element.value][0] - newBox[0];
-            var deltaY = oldPos[element.value][1] - newBox[1];
-            window.requestAnimationFrame(function () {
-                element.style.transform = "translate(" + deltaX + "px," + deltaY + "px)";
-                element.style.transition = 'transform 0s';
-                window.requestAnimationFrame(function () {
-                    element.style.transform = '';
-                    element.style.transition = 'transform 150ms';
-                });
-            });
+    function sortAnimationStart(_tags, flex) {
+        forEachMap(_tags, function (v) {
+            var copy = letID(v[2].cloneNode(true)),
+                r = getRect(v[2]);
+            animations[v[2].value] = copy;
+            setStyles(copy, {
+                'height': r[3],
+                'left': 0,
+                'position': 'fixed',
+                'top': 0,
+                'transition': 'transform 0s',
+                'width': r[2],
+                'z-index': 9999
+            }), translate(copy, r[0], r[1]);
+            setChildLast(flex, copy);
         });
     }
 
-    function translate(x, y, node) {
-        setStyle(node, 'transform', 'translate3d(' + x + 'px,' + y + 'px,0)');
+    function translate(node, x, y) {
+        setStyle(node, 'transform', 'translate(' + x + 'px,' + y + 'px)');
     }
     var index_js = {
         attach: attach,
