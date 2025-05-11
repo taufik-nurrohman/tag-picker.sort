@@ -286,22 +286,6 @@
     var letStyle = function letStyle(node, style) {
         return node.style[toCaseCamel(style)] = null, node;
     };
-    var letStyles = function letStyles(node, styles) {
-        if (!styles) {
-            return letAttribute(node, 'style');
-        }
-        if (isArray(styles)) {
-            return forEachArray(styles, function (k) {
-                return letStyle(node, k);
-            }), node;
-        }
-        if (isObject(styles)) {
-            return forEachObject(styles, function (v, k) {
-                return v && letStyle(node, k);
-            }), node;
-        }
-        return node;
-    };
     var setChildLast = function setChildLast(parent, node) {
         return parent.append(node), node;
     };
@@ -455,7 +439,9 @@
         offEventDefault(e);
         var $ = this,
             picker = getReference($),
+            _mask = picker._mask,
             state = picker.state,
+            flex = _mask.flex,
             n = state.n,
             _e = e,
             target = _e.target,
@@ -487,14 +473,11 @@
             'width': rect[2],
             'z-index': 9999
         });
-        setChildLast(B, copy);
+        setChildLast(flex, copy);
         var current = $,
             parent;
         while (parent = getParent(current)) {
-            setStyles(current = parent, {
-                'cursor': 'move',
-                'overflow': 'hidden'
-            });
+            setStyle(current = parent, 'cursor', 'move');
             if (B === current) {
                 break;
             }
@@ -543,7 +526,7 @@
             picker = getReference(current);
             value = current.value;
             while (parent = getParent(current)) {
-                letStyles(current = parent, ['cursor', 'overflow']);
+                letStyle(current = parent, 'cursor');
                 if (B === current) {
                     break;
                 }

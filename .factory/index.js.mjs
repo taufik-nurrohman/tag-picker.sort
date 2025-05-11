@@ -1,4 +1,4 @@
-import {B, D, getElements, getNext, getParent, getPrev, getStyle, hasClass, letElement, letID, letStyle, letStyles, setChildLast, setNext, setPrev, setStyle, setStyles, setValue} from '@taufik-nurrohman/document';
+import {B, D, getElements, getNext, getParent, getPrev, getStyle, hasClass, letElement, letID, letStyle, setChildLast, setNext, setPrev, setStyle, setStyles, setValue} from '@taufik-nurrohman/document';
 import {forEachArray, forEachMap, getReference, getValueInMap, letReference, setReference, setValueInMap} from '@taufik-nurrohman/f';
 import {getRect} from '@taufik-nurrohman/rect';
 import {isFunction} from '@taufik-nurrohman/is';
@@ -94,7 +94,8 @@ function onPointerDownTag(e) {
     offEventDefault(e);
     let $ = this,
         picker = getReference($),
-        {state} = picker,
+        {_mask, state} = picker,
+        {flex} = _mask,
         {n} = state,
         {target, type} = e;
     if (hasClass(target, n + '__x') || getParent(target, '.' + n + '__x')) {
@@ -124,13 +125,10 @@ function onPointerDownTag(e) {
         'width': rect[2],
         'z-index': 9999
     });
-    setChildLast(B, copy);
+    setChildLast(flex, copy);
     let current = $, parent;
     while (parent = getParent(current)) {
-        setStyles(current = parent, {
-            'cursor': 'move',
-            'overflow': 'hidden'
-        });
+        setStyle(current = parent, 'cursor', 'move');
         if (B === current) {
             break;
         }
@@ -175,7 +173,7 @@ function onPointerUpDocument(e) {
         picker = getReference(current);
         value = current.value;
         while (parent = getParent(current)) {
-            letStyles(current = parent, ['cursor', 'overflow']);
+            letStyle(current = parent, 'cursor');
             if (B === current) {
                 break;
             }
