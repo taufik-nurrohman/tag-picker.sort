@@ -1,4 +1,4 @@
-import {B, D, getElements, getNext, getParent, getPrev, getStyle, hasClass, letElement, letID, letStyle, setChildLast, setNext, setPrev, setStyle, setStyles, setValue} from '@taufik-nurrohman/document';
+import {B, D, W, getElements, getNext, getParent, getPrev, getStyle, hasClass, letElement, letID, letStyle, setChildLast, setNext, setPrev, setStyle, setStyles, setValue} from '@taufik-nurrohman/document';
 import {forEachArray, forEachMap, getReference, getValueInMap, letReference, setReference, setValueInMap} from '@taufik-nurrohman/f';
 import {getRect} from '@taufik-nurrohman/rect';
 import {isFunction} from '@taufik-nurrohman/is';
@@ -15,6 +15,8 @@ const EVENT_MOUSE = 'mouse';
 const EVENT_MOUSE_DOWN = EVENT_MOUSE + EVENT_DOWN;
 const EVENT_MOUSE_MOVE = EVENT_MOUSE + EVENT_MOVE;
 const EVENT_MOUSE_UP = EVENT_MOUSE + EVENT_UP;
+const EVENT_RESIZE = 'resize';
+const EVENT_SCROLL = 'scroll';
 const EVENT_TOUCH = 'touch';
 const EVENT_TOUCH_END = EVENT_TOUCH + 'end';
 const EVENT_TOUCH_MOVE = EVENT_TOUCH + EVENT_MOVE;
@@ -103,6 +105,8 @@ function onPointerDownTag(e) {
     }
     onEvent(EVENT_MOUSE_MOVE, D, onPointerMoveDocument);
     onEvent(EVENT_MOUSE_UP, D, onPointerUpDocument);
+    onEvent(EVENT_RESIZE, W, onResizeWindow);
+    onEvent(EVENT_SCROLL, W, onScrollWindow);
     onEvent(EVENT_TOUCH_END, D, onPointerUpDocument);
     onEvent(EVENT_TOUCH_MOVE, D, onPointerMoveDocument);
     if (EVENT_TOUCH_START === type) {
@@ -165,6 +169,8 @@ function onPointerMoveDocument(e) {
 function onPointerUpDocument(e) {
     offEvent(EVENT_MOUSE_MOVE, D, onPointerMoveDocument);
     offEvent(EVENT_MOUSE_UP, D, onPointerUpDocument);
+    offEvent(EVENT_RESIZE, W, onResizeWindow);
+    offEvent(EVENT_SCROLL, W, onScrollWindow);
     offEvent(EVENT_TOUCH_END, D, onPointerUpDocument);
     offEvent(EVENT_TOUCH_MOVE, D, onPointerMoveDocument);
     if (copy) {
@@ -172,6 +178,7 @@ function onPointerUpDocument(e) {
         letStyle(current = getReference(copy), 'visibility');
         picker = getReference(current);
         value = current.value;
+        current.focus();
         while (parent = getParent(current)) {
             letStyle(current = parent, 'cursor');
             if (B === current) {
@@ -204,6 +211,22 @@ function onLetTag(name) {
         offEvent(EVENT_MOUSE_DOWN, at, onPointerDownTag);
         offEvent(EVENT_TOUCH_START, at, onPointerDownTag);
     }
+}
+
+function onResizeWindow(e) {
+    if (!copy) {
+        return;
+    }
+    if (e.touches) {
+        e = e.touches[0];
+    }
+    x = e.clientX - left;
+    y = e.clientY - top;
+    translate(copy, x, y);
+}
+
+function onScrollWindow(e) {
+    onResizeWindow(e);
 }
 
 function onSetTag(name) {
