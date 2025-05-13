@@ -47,5 +47,5 @@
   "scripts": {
     "pack": "pack --clean=false --from=.factory --js-format=umd --js-name=TagPicker.Sort --js-top='%(js.license)' --mjs=true --to=."
   },
-  "version": "1.0.1"
+  "version": "1.0.0"
 }
