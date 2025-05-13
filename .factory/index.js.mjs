@@ -33,9 +33,12 @@ function attach(self, state) {
         let $ = this,
             {state, value} = $,
             {join} = state;
-        value = value.split(join).reverse();
-        $.value = value.join(join);
-        return $.fire('sort.tags', [value]);
+        if (value) {
+            value = value.split(join).reverse();
+            $.value = value.join(join);
+            return $.fire('sort.tags', [value]);
+        }
+        return $;
     });
     !isFunction($$.sort) && ($$.sort = function (method) {
         let $ = this,
@@ -47,11 +50,12 @@ function attach(self, state) {
                 sensitivity: 'base'
             });
         }).bind($);
-        v = value;
-        value = value.split(join).sort(method);
-        if (v !== value.join(join)) {
-            $.value = value.join(join);
-            return $.fire('sort.tags', [value]);
+        if (v = value) {
+            value = value.split(join).sort(method);
+            if (v !== value.join(join)) {
+                $.value = value.join(join);
+                return $.fire('sort.tags', [value]);
+            }
         }
         return $;
     });
