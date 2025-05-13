@@ -1,9 +1,8 @@
-import {B, D, getElements, getNext, getParent, getPrev, getStyle, hasClass, letElement, letID, letStyle, setChildLast, setNext, setPrev, setStyle, setStyles, setValue} from '@taufik-nurrohman/document';
-import {forEachArray, forEachMap, getReference, getValueInMap, letReference, setReference, setValueInMap} from '@taufik-nurrohman/f';
+import {B, D, getElements, getParent, getPrev, hasClass, letElement, letID, letStyle, setChildLast, setNext, setPrev, setStyle, setStyles, setValue} from '@taufik-nurrohman/document';
+import {forEachArray, forEachMap, getReference, letReference, setReference, setValueInMap} from '@taufik-nurrohman/f';
 import {getRect} from '@taufik-nurrohman/rect';
 import {isFunction} from '@taufik-nurrohman/is';
 import {offEvent, offEventDefault, onEvent} from '@taufik-nurrohman/event';
-import {toCount} from '@taufik-nurrohman/to';
 
 const name = 'TagPicker.Sort';
 
@@ -15,8 +14,6 @@ const EVENT_MOUSE = 'mouse';
 const EVENT_MOUSE_DOWN = EVENT_MOUSE + EVENT_DOWN;
 const EVENT_MOUSE_MOVE = EVENT_MOUSE + EVENT_MOVE;
 const EVENT_MOUSE_UP = EVENT_MOUSE + EVENT_UP;
-const EVENT_RESIZE = 'resize';
-const EVENT_SCROLL = 'scroll';
 const EVENT_TOUCH = 'touch';
 const EVENT_TOUCH_END = EVENT_TOUCH + 'end';
 const EVENT_TOUCH_MOVE = EVENT_TOUCH + EVENT_MOVE;
@@ -25,7 +22,7 @@ const EVENT_TOUCH_START = EVENT_TOUCH + 'start';
 function attach(self, state) {
     let $ = this,
         $$ = $.constructor._,
-        {_mask, _tags} = $;
+        {_tags} = $;
     forEachMap(_tags, v => {
         v = v[2];
         onEvent(EVENT_MOUSE_DOWN, v, onPointerDownTag);
@@ -34,24 +31,22 @@ function attach(self, state) {
     });
     !isFunction($$.reverse) && ($$.reverse = function () {
         let $ = this,
-            {_mask, _tags, state, value} = $,
-            {flex} = _mask,
+            {state, value} = $,
             {join} = state;
         value = value.split(join).reverse();
         $.value = value.join(join);
         return $.fire('sort.tags', [value]);
     });
     !isFunction($$.sort) && ($$.sort = function (method) {
+        let $ = this,
+            {state, value} = $,
+            {join} = state, v;
         method = (method || function (a, b) {
             return a.localeCompare(b, undefined, {
                 numeric: true,
                 sensitivity: 'base'
             });
         }).bind($);
-        let $ = this,
-            {_mask, _tags, state, value} = $,
-            {flex} = _mask,
-            {join} = state, v;
         v = value;
         value = value.split(join).sort(method);
         if (v !== value.join(join)) {

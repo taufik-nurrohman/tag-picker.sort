@@ -357,9 +357,8 @@
 
     function attach(self, state) {
         var $ = this,
-            $$ = $.constructor._;
-        $._mask;
-        var _tags = $._tags;
+            $$ = $.constructor._,
+            _tags = $._tags;
         forEachMap(_tags, function (v) {
             v = v[2];
             onEvent(EVENT_MOUSE_DOWN, v, onPointerDownTag);
@@ -368,31 +367,25 @@
         });
         !isFunction($$.reverse) && ($$.reverse = function () {
             var $ = this,
-                _mask = $._mask;
-            $._tags;
-            var state = $.state,
-                value = $.value;
-            _mask.flex;
-            var join = state.join;
+                state = $.state,
+                value = $.value,
+                join = state.join;
             value = value.split(join).reverse();
             $.value = value.join(join);
             return $.fire('sort.tags', [value]);
         });
         !isFunction($$.sort) && ($$.sort = function (method) {
+            var $ = this,
+                state = $.state,
+                value = $.value,
+                join = state.join,
+                v;
             method = (method || function (a, b) {
                 return a.localeCompare(b, undefined, {
                     numeric: true,
                     sensitivity: 'base'
                 });
             }).bind($);
-            var $ = this,
-                _mask = $._mask;
-            $._tags;
-            var state = $.state,
-                value = $.value;
-            _mask.flex;
-            var join = state.join,
-                v;
             v = value;
             value = value.split(join).sort(method);
             if (v !== value.join(join)) {
