@@ -110,7 +110,7 @@
         return null === x;
     };
     var isNumber = function isNumber(x) {
-        return 'number' === typeof x;
+        return 'number' === typeof x && !Number.isNaN(x);
     };
     var isObject = function isObject(x, isPlain) {
         if (isPlain === void 0) {
@@ -158,6 +158,10 @@
     var toCount = function toCount(x) {
         return x.length;
     };
+
+    function _toIterator(v) {
+        return v[Symbol.iterator]();
+    }
     var forEachArray = function forEachArray(array, at) {
         for (var i = 0, j = toCount(array), v; i < j; ++i) {
             v = at.call(array, array[i], i);
@@ -175,7 +179,7 @@
         return array;
     };
     var forEachMap = function forEachMap(map, at) {
-        var items = map.entries(),
+        var items = _toIterator(map),
             item = items.next();
         while (!item.done) {
             var _item$value = _maybeArrayLike(_slicedToArray, item.value, 2),
